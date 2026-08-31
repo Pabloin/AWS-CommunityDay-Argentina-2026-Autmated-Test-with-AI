@@ -1,0 +1,69 @@
+name: StockLens v02 CI/CD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "StockLens_v02/**"
+      - ".github/workflows/stocklens-v02.yml"
+  pull_request:
+    paths:
+      - "StockLens_v02/**"
+      - ".github/workflows/stocklens-v02.yml"
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: StockLens_v02
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build all apps
+        run: ./scripts/build-all.sh
+
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: StockLens_v02
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Build artifacts
+        run: ./scripts/build-all.sh
+
+      - name: Upload web frontend
+        run: aws s3 sync front_web/dist s3://${{ vars.STOCKLENS_FRONT_WEB_BUCKET }} --delete
+
+      - name: Upload mobile frontend
+        run: aws s3 sync front_mobile/dist s3://${{ vars.STOCKLENS_FRONT_MOBILE_BUCKET }} --delete
+
+      - name: Update API Lambda
+        run: aws lambda update-function-code --function-name ${{ vars.STOCKLENS_API_FUNCTION }} --zip-file fileb://backend/dist/api.zip
+
+      - name: Invalidate web frontend cache
+        run: aws cloudfront create-invalidation --distribution-id ${{ vars.STOCKLENS_FRONT_WEB_DISTRIBUTION_ID }} --paths "/*"
+
+      - name: Invalidate mobile frontend cache
+        run: aws cloudfront create-invalidation --distribution-id ${{ vars.STOCKLENS_FRONT_MOBILE_DISTRIBUTION_ID }} --paths "/*"

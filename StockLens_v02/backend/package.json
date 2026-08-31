@@ -1,0 +1,16 @@
+{
+  "name": "stocklens-v02-backend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "check": "node --check functions/api.mjs",
+    "package": "rm -rf dist/package dist/api.zip && mkdir -p dist/package && cp package.json package-lock.json dist/package/ && cp -R functions dist/package/ && npm install --omit=dev --prefix dist/package --ignore-scripts --no-audit --no-fund && cd dist/package && zip -qr ../api.zip ."
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.864.0",
+    "@aws-sdk/client-s3": "^3.864.0",
+    "@aws-sdk/lib-dynamodb": "^3.864.0",
+    "@aws-sdk/s3-request-presigner": "^3.864.0"
+  }
+}

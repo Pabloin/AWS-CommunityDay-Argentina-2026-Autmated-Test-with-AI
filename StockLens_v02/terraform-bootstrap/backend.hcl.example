@@ -1,0 +1,2 @@
+# Bootstrap intentionally starts with local state.
+# After creating the bucket, migrate this bootstrap stack only if desired.

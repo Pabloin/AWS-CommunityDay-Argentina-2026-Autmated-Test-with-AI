@@ -61,6 +61,7 @@ web_modules/
 
 # Output of 'npm pack'
 *.tgz
+*.zip
 
 # Yarn Integrity file
 .yarn-integrity
@@ -109,6 +110,17 @@ dist
 
 # Serverless directories
 .serverless/
+
+# Terraform local working directories
+**/.terraform/
+**/.terraform-build/
+**/terraform/backend.hcl
+**/terraform/terraform.tfstate
+**/terraform/terraform.tfstate.*
+**/terraform/tfplan
+**/terraform-bootstrap/terraform.tfstate
+**/terraform-bootstrap/terraform.tfstate.*
+**/terraform-bootstrap/tfplan
 
 # FuseBox cache
 .fusebox/
