@@ -632,7 +632,9 @@ function App() {
               >
                 <span>
                   <strong>{item.name}</strong>
-                  <small>{item.location}</small>
+                  <small>
+                    {item.category} · {item.location}
+                  </small>
                 </span>
                 <b className={item.quantity <= item.minQuantity ? "danger" : ""}>
                   {item.quantity}
