@@ -47,6 +47,12 @@ locals {
     ? var.github_oidc_provider_arn
     : aws_iam_openid_connect_provider.github[0].arn
   )
+  github_oidc_subjects = [
+    "repo:${var.github_owner}/${var.github_repo}:*",
+    "repo:${lower(var.github_owner)}/${var.github_repo}:*",
+    "repo:${var.github_owner}@*/${var.github_repo}@*:*",
+    "repo:${lower(var.github_owner)}@*/${var.github_repo}@*:*"
+  ]
 
   tags = {
     App       = "StockLens"
@@ -745,7 +751,7 @@ resource "aws_iam_role" "github_actions" {
           "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
         }
         StringLike = {
-          "token.actions.githubusercontent.com:sub" = "repo:${var.github_owner}/${var.github_repo}:*"
+          "token.actions.githubusercontent.com:sub" = local.github_oidc_subjects
         }
       }
     }]
@@ -835,7 +841,7 @@ resource "aws_iam_role" "github_actions_infra" {
           "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
         }
         StringLike = {
-          "token.actions.githubusercontent.com:sub" = "repo:${var.github_owner}/${var.github_repo}:*"
+          "token.actions.githubusercontent.com:sub" = local.github_oidc_subjects
         }
       }
     }]
