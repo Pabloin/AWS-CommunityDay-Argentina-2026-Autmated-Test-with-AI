@@ -27,16 +27,28 @@ jobs:
       run:
         working-directory: StockLens_v04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
+          package-manager-cache: false
 
-      - uses: aws-actions/configure-aws-credentials@v4
+      - name: Check AWS app role secret
+        env:
+          ROLE_ARN: ${{ secrets.STOCKLENS_V04_APP_ROLE_ARN }}
+        run: |
+          if [ -z "$ROLE_ARN" ]; then
+            echo "::error title=Missing secret::Configure STOCKLENS_V04_APP_ROLE_ARN with the github_actions_app_role_arn Terraform output."
+            exit 1
+          fi
+
+      - uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.STOCKLENS_V04_APP_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
+          role-session-name: stocklens-v04-app
+          allowed-account-ids: "442809140287"
 
       - name: Generate Playwright test with Bedrock
         run: AI_TEST_GENERATOR_FUNCTION="${PROJECT_NAME}-ai-test-generator" node scripts/generate-ai-tests.mjs

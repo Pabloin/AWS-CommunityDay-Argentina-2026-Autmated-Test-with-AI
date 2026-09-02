@@ -35,14 +35,25 @@ jobs:
       run:
         working-directory: ${{ env.TF_WORKING_DIR }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v4
 
-      - uses: aws-actions/configure-aws-credentials@v4
+      - name: Check AWS infra role secret
+        env:
+          ROLE_ARN: ${{ secrets.STOCKLENS_V04_INFRA_ROLE_ARN }}
+        run: |
+          if [ -z "$ROLE_ARN" ]; then
+            echo "::error title=Missing secret::Configure STOCKLENS_V04_INFRA_ROLE_ARN with an AWS role ARN trusted by GitHub OIDC."
+            exit 1
+          fi
+
+      - uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.STOCKLENS_V04_INFRA_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
+          role-session-name: stocklens-v04-infra
+          allowed-account-ids: "442809140287"
 
       - name: Prepare Lambda package input
         run: |
