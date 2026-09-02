@@ -119,8 +119,13 @@ output "codebuild_deploy_name" {
 }
 
 output "codepipeline_name" {
-  description = "AWS CodePipeline name. Empty until codestar_connection_arn is provided."
-  value       = try(aws_codepipeline.stocklens_v03[0].name, "")
+  description = "AWS CodePipeline name."
+  value       = aws_codepipeline.stocklens_v03.name
+}
+
+output "codestar_connection_arn" {
+  description = "CodeStar Connections ARN used by CodePipeline. Authorize it in the AWS Console if status is PENDING."
+  value       = local.codestar_connection_arn
 }
 
 output "pipeline_artifacts_bucket" {

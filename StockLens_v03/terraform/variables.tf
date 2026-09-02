@@ -95,7 +95,7 @@ variable "github_oidc_provider_arn" {
 variable "pipeline_branch_name" {
   description = "Git branch that triggers the AWS CodePipeline v3 quality gate."
   type        = string
-  default     = "main"
+  default     = "develop"
 }
 
 variable "codestar_connection_arn" {
@@ -107,5 +107,5 @@ variable "codestar_connection_arn" {
 variable "bedrock_model_id" {
   description = "Amazon Bedrock model used by the AI test generator Lambda."
   type        = string
-  default     = "anthropic.claude-3-haiku-20240307-v1:0"
+  default     = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
 }

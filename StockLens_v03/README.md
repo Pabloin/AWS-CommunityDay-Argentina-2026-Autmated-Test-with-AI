@@ -109,7 +109,7 @@ Despues de aplicar Terraform, usar el output `cognito_user_pool_id`:
 Flujo principal:
 
 ```text
-GitHub push
+GitHub push a develop
   -> CodePipeline Source
   -> CodeBuild AIQualityGate
        -> Lambda ai-test-generator
@@ -128,7 +128,7 @@ Si esa variable queda vacia, Terraform crea los recursos de soporte pero no
 crea el `aws_codepipeline`; esto permite probar la infraestructura base sin
 tener todavia la conexion aprobada.
 
-La Lambda usa por defecto `anthropic.claude-3-haiku-20240307-v1:0`. Se puede
+La Lambda usa por defecto `us.anthropic.claude-haiku-4-5-20251001-v1:0`. Se puede
 cambiar con `bedrock_model_id`.
 
 El modo por defecto es estricto: si Bedrock falla, si la Lambda no devuelve un

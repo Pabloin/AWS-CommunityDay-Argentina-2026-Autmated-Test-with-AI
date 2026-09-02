@@ -1,6 +1,6 @@
 import { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
 
-const modelId = process.env.BEDROCK_MODEL_ID ?? "anthropic.claude-3-haiku-20240307-v1:0";
+const modelId = process.env.BEDROCK_MODEL_ID ?? "us.anthropic.claude-haiku-4-5-20251001-v1:0";
 const bedrock = new BedrockRuntimeClient({});
 
 function response(statusCode, body) {
@@ -35,6 +35,9 @@ function validatePlaywrightTest(source) {
   if (!trimmed.includes("test(")) {
     throw new Error("Generated source does not define a Playwright test");
   }
+  if (/localhost|127\.0\.0\.1/.test(trimmed)) {
+    throw new Error("Generated source hardcodes a local host instead of using page.goto('/')");
+  }
   if (trimmed.length > 12000) {
     throw new Error("Generated source is longer than the allowed safety limit");
   }
@@ -61,6 +64,7 @@ export async function handler(event) {
     "Focus on realistic user-visible behavior from the provided files.",
     "Use robust locators and avoid brittle implementation details.",
     "The test must import { test, expect } from '@playwright/test'.",
+    "Use page.goto('/') so Playwright uses the configured baseURL. Do not hardcode localhost, ports or deployed URLs.",
     "If authentication blocks deep flows, create a smoke/regression test that still validates the app shell.",
     "",
     context

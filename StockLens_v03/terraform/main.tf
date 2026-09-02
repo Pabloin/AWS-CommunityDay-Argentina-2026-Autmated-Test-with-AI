@@ -45,6 +45,11 @@ locals {
     ? var.github_oidc_provider_arn
     : aws_iam_openid_connect_provider.github[0].arn
   )
+  codestar_connection_arn = (
+    var.codestar_connection_arn != ""
+    ? var.codestar_connection_arn
+    : aws_codestarconnections_connection.github[0].arn
+  )
 
   tags = {
     App       = "StockLens"
@@ -1116,6 +1121,18 @@ resource "aws_iam_role" "codepipeline" {
   })
 }
 
+resource "aws_codestarconnections_connection" "github" {
+  count = var.codestar_connection_arn == "" ? 1 : 0
+
+  name          = "${var.project_name}-github"
+  provider_type = "GitHub"
+
+  tags = merge(local.tags, {
+    Component = "pipeline"
+    Purpose   = "github-source-connection"
+  })
+}
+
 resource "aws_iam_role_policy" "codepipeline" {
   name = "${var.project_name}-codepipeline-policy"
   role = aws_iam_role.codepipeline.id
@@ -1128,7 +1145,7 @@ resource "aws_iam_role_policy" "codepipeline" {
         Action = [
           "codestar-connections:UseConnection"
         ]
-        Resource = var.codestar_connection_arn == "" ? "*" : var.codestar_connection_arn
+        Resource = local.codestar_connection_arn
       },
       {
         Effect = "Allow"
@@ -1159,8 +1176,6 @@ resource "aws_iam_role_policy" "codepipeline" {
 }
 
 resource "aws_codepipeline" "stocklens_v03" {
-  count = var.codestar_connection_arn == "" ? 0 : 1
-
   name     = "${var.project_name}-ai-test-pipeline"
   role_arn = aws_iam_role.codepipeline.arn
 
@@ -1181,7 +1196,7 @@ resource "aws_codepipeline" "stocklens_v03" {
       output_artifacts = ["SourceOutput"]
 
       configuration = {
-        ConnectionArn        = var.codestar_connection_arn
+        ConnectionArn        = local.codestar_connection_arn
         FullRepositoryId     = "${var.github_owner}/${var.github_repo}"
         BranchName           = var.pipeline_branch_name
         OutputArtifactFormat = "CODE_ZIP"

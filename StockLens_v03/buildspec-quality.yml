@@ -17,7 +17,7 @@ phases:
       - ./scripts/build-all.sh
       - npm install --prefix front_web --no-save @playwright/test
       - npx --prefix front_web playwright install --with-deps chromium
-      - npm --prefix front_web exec playwright test -- --config=playwright.config.ts
+      - npm --prefix front_web exec playwright test -- --config=front_web/playwright.config.ts
 
 artifacts:
   files:
