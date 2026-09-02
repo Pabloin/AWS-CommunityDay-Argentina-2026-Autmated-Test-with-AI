@@ -109,7 +109,7 @@ Despues de aplicar Terraform, usar el output `cognito_user_pool_id`:
 Flujo principal:
 
 ```text
-GitHub push a develop
+GitHub push a master
   -> CodePipeline Source
   -> CodeBuild AIQualityGate
        -> Lambda ai-test-generator

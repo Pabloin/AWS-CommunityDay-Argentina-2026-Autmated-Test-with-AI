@@ -95,7 +95,7 @@ variable "github_oidc_provider_arn" {
 variable "pipeline_branch_name" {
   description = "Git branch that triggers the AWS CodePipeline v3 quality gate."
   type        = string
-  default     = "develop"
+  default     = "master"
 }
 
 variable "codestar_connection_arn" {
