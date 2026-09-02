@@ -4,11 +4,13 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 cd "$repo_root/front_web"
-npm install
+npm ci --include=optional
+npm rebuild esbuild
 npm run build
 
 cd "$repo_root/front_mobile"
-npm install
+npm ci --include=optional
+npm rebuild esbuild
 npm run build
 
 cd "$repo_root/backend"
