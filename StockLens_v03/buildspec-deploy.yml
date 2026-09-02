@@ -1,0 +1,13 @@
+version: 0.2
+
+env:
+  shell: bash
+
+phases:
+  build:
+    commands:
+      - aws s3 sync StockLens_v03/front_web/dist "s3://${FRONT_WEB_BUCKET}" --delete
+      - aws s3 sync StockLens_v03/front_mobile/dist "s3://${FRONT_MOBILE_BUCKET}" --delete
+      - aws lambda update-function-code --function-name "${API_FUNCTION_NAME}" --zip-file "fileb://StockLens_v03/backend/dist/api.zip"
+      - aws cloudfront create-invalidation --distribution-id "${FRONT_WEB_DISTRIBUTION_ID}" --paths "/*"
+      - aws cloudfront create-invalidation --distribution-id "${FRONT_MOBILE_DISTRIBUTION_ID}" --paths "/*"

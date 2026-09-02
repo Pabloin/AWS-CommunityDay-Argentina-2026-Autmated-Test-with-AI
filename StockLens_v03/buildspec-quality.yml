@@ -1,0 +1,29 @@
+version: 0.2
+
+env:
+  shell: bash
+  variables:
+    ALLOW_AI_TEST_FALLBACK: "false"
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - cd StockLens_v03
+  build:
+    commands:
+      - node scripts/generate-ai-tests.mjs
+      - ./scripts/build-all.sh
+      - npm install --prefix front_web --no-save @playwright/test
+      - npx --prefix front_web playwright install --with-deps chromium
+      - npm --prefix front_web exec playwright test -- --config=playwright.config.ts
+
+artifacts:
+  files:
+    - StockLens_v03/buildspec-deploy.yml
+    - StockLens_v03/front_web/dist/**/*
+    - StockLens_v03/front_mobile/dist/**/*
+    - StockLens_v03/backend/dist/api.zip
+    - StockLens_v03/front_web/tests/ai/ai.generated.spec.ts
+  discard-paths: no
