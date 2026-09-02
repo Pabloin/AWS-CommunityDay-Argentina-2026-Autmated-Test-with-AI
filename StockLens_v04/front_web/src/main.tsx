@@ -557,9 +557,12 @@ function App() {
     <main className="app-shell">
       <section className="hero">
         <div>
-          <span className="eyebrow">
-            <QrCode size={16} /> StockLens
-          </span>
+          <div className="hero-badges">
+            <span className="eyebrow">
+              <QrCode size={16} /> StockLens
+            </span>
+            <span className="version-badge">v4 GitHub Actions + OIDC</span>
+          </div>
           <h1>StockLens</h1>
           <p>
             Inventario visual con QR: identifica activos, valida etiquetas y controla
