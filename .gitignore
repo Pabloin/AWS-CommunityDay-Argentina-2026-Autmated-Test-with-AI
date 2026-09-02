@@ -158,6 +158,6 @@ vite.config.ts.timestamp-*
 
 # PEI
 codex_sesion.txt
-
+**/codex_follow_up*.md
 
 

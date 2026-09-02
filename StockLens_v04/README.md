@@ -74,6 +74,17 @@ permisos suficientes para crear la infraestructura. Despues del primer apply,
 Terraform expone `github_actions_infra_role_arn` y ese rol puede quedar como
 valor definitivo del secret.
 
+El bootstrap administrativo opcional esta en:
+
+```text
+scripts/bootstrap-github-oidc-role.sh
+```
+
+No corre Terraform. Solo crea el proveedor OIDC si falta, crea/actualiza el rol
+bootstrap y muestra el ARN para el secret. Cuando el secret ya apunta al rol
+final administrado por Terraform, se puede ejecutar en modo `destroy` para
+eliminar el rol bootstrap temporal.
+
 ### Aplicacion
 
 Workflow:
