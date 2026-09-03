@@ -64,6 +64,56 @@ jobs:
       - name: Run generated Playwright tests
         run: npm --prefix front_web exec playwright test -- --config=front_web/playwright.config.ts
 
+      - name: Upload Playwright evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: stocklens-v04-playwright-evidence
+          path: |
+            StockLens_v04/front_web/playwright-report
+            StockLens_v04/front_web/test-results
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload Playwright evidence to S3
+        if: always()
+        run: |
+          account_id="$(aws sts get-caller-identity --query Account --output text)"
+          bucket="${PROJECT_NAME}-playwright-evidence-${account_id}"
+          prefix="runs/${GITHUB_RUN_ID}/${GITHUB_RUN_ATTEMPT}"
+
+          if ! aws s3api head-bucket --bucket "$bucket" >/dev/null 2>&1; then
+            echo "::warning title=Missing Playwright evidence bucket::${bucket} does not exist yet. Run the infrastructure workflow before relying on S3 video evidence."
+            exit 0
+          fi
+
+          if [ -d front_web/playwright-report ]; then
+            aws s3 sync front_web/playwright-report "s3://${bucket}/${prefix}/playwright-report" --delete
+          fi
+
+          if [ -d front_web/test-results ]; then
+            aws s3 sync front_web/test-results "s3://${bucket}/${prefix}/test-results" --delete
+          fi
+
+          {
+            echo "### Playwright evidence"
+            echo
+            echo "S3 prefix:"
+            echo
+            echo "\`\`\`text"
+            echo "s3://${bucket}/${prefix}/"
+            echo "\`\`\`"
+            echo
+            echo "Video links expire in 7 days:"
+            echo
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          find front_web/test-results -name "*.webm" -print | while read -r video; do
+            key="${prefix}/test-results/${video#front_web/test-results/}"
+            url="$(aws s3 presign "s3://${bucket}/${key}" --expires-in 604800)"
+            echo "- [$(basename "$video")](${url})" >> "$GITHUB_STEP_SUMMARY"
+          done
+
       - name: Resolve AWS resource names
         id: resources
         run: |

@@ -37,6 +37,7 @@ pipelines de GitHub Actions con OIDC hacia AWS:
 | Servicio | Uso v04 |
 | --- | --- |
 | S3 | Buckets privados para front web/mobile y evidencia. |
+| S3 Playwright Evidence | Bucket privado para videos, traces y reportes de Playwright. |
 | CloudFront | HTTPS publico para frontends. |
 | ACM | Certificado separado para dominios v04. |
 | Route53 | Validacion DNS y alias records. |
@@ -162,6 +163,8 @@ AI_TEST_GENERATOR_FUNCTION=stocklens-v04-ai-test-generator node scripts/generate
 npm install --prefix front_web --no-save @playwright/test
 npx --prefix front_web playwright install --with-deps chromium
 npm --prefix front_web exec playwright test -- --config=front_web/playwright.config.ts
+upload artifact stocklens-v04-playwright-evidence con video, trace y reporte HTML
+aws s3 sync de evidencia Playwright a s3://stocklens-v04-playwright-evidence-ACCOUNT/runs/RUN_ID/ATTEMPT/
 aws s3 sync front_web/dist s3://stocklens-v04-front-web-ACCOUNT
 aws s3 sync front_mobile/dist s3://stocklens-v04-front-mobile-ACCOUNT
 aws lambda update-function-code --function-name stocklens-v04-api

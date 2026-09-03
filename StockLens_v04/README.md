@@ -104,6 +104,8 @@ escribe front_web/tests/ai/ai.generated.spec.ts
 build front_web/front_mobile/backend
 instala Playwright
 corre Playwright
+sube video, trace y reporte HTML como artifact
+sube video, trace y reporte HTML a S3
 despliega a S3, Lambda y CloudFront solo si pasa
 ```
 
@@ -122,6 +124,15 @@ STOCKLENS_V04_FRONT_MOBILE_DISTRIBUTION_ID
 
 Si esas variables no existen, el workflow intenta resolver las distribuciones
 por alias CloudFront.
+
+Evidencia Playwright en S3:
+
+```text
+s3://stocklens-v04-playwright-evidence-442809140287/runs/<github_run_id>/<attempt>/
+```
+
+El workflow tambien agrega links presignados temporales a los videos `.webm` en
+el summary del run.
 
 ## AI Quality Gate
 
@@ -157,7 +168,9 @@ El workflow de aplicacion lo deja en `false`.
 6. Abrir el archivo generado en logs/artifacts o en el commit si se decide
    persistirlo.
 7. Mostrar `Run generated Playwright tests`.
-8. Mostrar deploy solo despues de pasar el quality gate.
+8. Descargar el artifact `stocklens-v04-playwright-evidence` o abrir los links
+   presignados del summary para mostrar el video de Playwright.
+9. Mostrar deploy solo despues de pasar el quality gate.
 
 Mensaje:
 

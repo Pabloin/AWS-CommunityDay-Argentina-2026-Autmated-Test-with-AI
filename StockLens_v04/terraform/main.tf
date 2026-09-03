@@ -82,6 +82,15 @@ resource "aws_s3_bucket" "evidence" {
   tags   = local.tags
 }
 
+resource "aws_s3_bucket" "playwright_evidence" {
+  bucket = "${var.project_name}-playwright-evidence-${data.aws_caller_identity.current.account_id}"
+
+  tags = merge(local.tags, {
+    Component = "pipeline"
+    Purpose   = "playwright-video-trace-evidence"
+  })
+}
+
 resource "aws_s3_bucket_public_access_block" "front_web" {
   bucket = aws_s3_bucket.front_web.id
 
@@ -107,6 +116,42 @@ resource "aws_s3_bucket_public_access_block" "evidence" {
   block_public_policy     = true
   ignore_public_acls      = true
   restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_public_access_block" "playwright_evidence" {
+  bucket = aws_s3_bucket.playwright_evidence.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "playwright_evidence" {
+  bucket = aws_s3_bucket.playwright_evidence.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "playwright_evidence" {
+  bucket = aws_s3_bucket.playwright_evidence.id
+
+  rule {
+    id     = "expire-playwright-evidence"
+    status = "Enabled"
+
+    filter {
+      prefix = "runs/"
+    }
+
+    expiration {
+      days = 14
+    }
+  }
 }
 
 resource "aws_s3_bucket_cors_configuration" "evidence" {
@@ -774,7 +819,8 @@ resource "aws_iam_role_policy" "github_actions" {
         ]
         Resource = [
           aws_s3_bucket.front_web.arn,
-          aws_s3_bucket.front_mobile.arn
+          aws_s3_bucket.front_mobile.arn,
+          aws_s3_bucket.playwright_evidence.arn
         ]
       },
       {
@@ -786,7 +832,8 @@ resource "aws_iam_role_policy" "github_actions" {
         ]
         Resource = [
           "${aws_s3_bucket.front_web.arn}/*",
-          "${aws_s3_bucket.front_mobile.arn}/*"
+          "${aws_s3_bucket.front_mobile.arn}/*",
+          "${aws_s3_bucket.playwright_evidence.arn}/*"
         ]
       },
       {

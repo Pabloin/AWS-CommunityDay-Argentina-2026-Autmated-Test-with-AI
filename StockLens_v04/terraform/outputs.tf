@@ -58,6 +58,11 @@ output "evidence_bucket" {
   value       = aws_s3_bucket.evidence.bucket
 }
 
+output "playwright_evidence_bucket" {
+  description = "S3 bucket for Playwright videos, traces and HTML reports."
+  value       = aws_s3_bucket.playwright_evidence.bucket
+}
+
 output "github_actions_app_role_arn" {
   description = "Role ARN for the StockLens v04 GitHub Actions application deployment workflow."
   value       = aws_iam_role.github_actions.arn
