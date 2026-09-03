@@ -15,6 +15,7 @@ ejecuta desde GitHub Actions; no desde la notebook de la demo.
 
 - `front_web/`: administracion desktop/web.
 - `front_mobile/`: experiencia mobile-first de campo.
+- `front_admin/`: visor estatico de evidencia Playwright.
 - `backend/`: API serverless para activos, movimientos y evidencia.
 - `ai_test_generator/`: Lambda que usa Amazon Bedrock para proponer tests.
 - `terraform/`: infraestructura AWS de la app, roles OIDC y Lambda generadora.
@@ -23,8 +24,9 @@ ejecuta desde GitHub Actions; no desde la notebook de la demo.
 
 ## Dominios
 
-- Web/admin: `stock-v4.lens.glaciar.org`
+- Web: `stock-v4.lens.glaciar.org`
 - Mobile: `mobile-v4.lens.glaciar.org`
+- Admin/evidencia: `admin-v4.lens.glaciar.org`
 
 Terraform crea un certificado ACM separado para esos dominios y registros
 Route53 dentro de la hosted zone `lens.glaciar.org`.
@@ -106,7 +108,8 @@ instala Playwright
 corre Playwright
 sube video, trace y reporte HTML como artifact
 sube video, trace y reporte HTML a S3
-despliega a S3, Lambda y CloudFront solo si pasa
+publica el indice del visor admin incluso si Playwright falla
+despliega web, mobile, admin, Lambda y CloudFront solo si pasa
 ```
 
 Secret requerido:
@@ -120,6 +123,7 @@ Variables opcionales:
 ```text
 STOCKLENS_V04_FRONT_WEB_DISTRIBUTION_ID
 STOCKLENS_V04_FRONT_MOBILE_DISTRIBUTION_ID
+STOCKLENS_V04_FRONT_ADMIN_DISTRIBUTION_ID
 ```
 
 Si esas variables no existen, el workflow intenta resolver las distribuciones
@@ -132,7 +136,16 @@ s3://stocklens-v04-playwright-evidence-442809140287/runs/<github_run_id>/<attemp
 ```
 
 El workflow tambien agrega links presignados temporales a los videos `.webm` en
-el summary del run.
+el summary del run. El sitio admin lee un indice estatico publicado en:
+
+```text
+https://admin-v4.lens.glaciar.org
+```
+
+Ese sitio no ejecuta backend propio: CloudFront sirve `front_admin/dist` desde
+S3 y el navegador reproduce videos privados de S3 usando URLs presignadas. Si
+Playwright falla, el workflow publica igual el indice de evidencia, pero no
+despliega web, mobile ni API.
 
 ## AI Quality Gate
 
@@ -168,9 +181,11 @@ El workflow de aplicacion lo deja en `false`.
 6. Abrir el archivo generado en logs/artifacts o en el commit si se decide
    persistirlo.
 7. Mostrar `Run generated Playwright tests`.
-8. Descargar el artifact `stocklens-v04-playwright-evidence` o abrir los links
-   presignados del summary para mostrar el video de Playwright.
-9. Mostrar deploy solo despues de pasar el quality gate.
+8. Abrir `https://admin-v4.lens.glaciar.org` para mostrar la lista de runs y el
+   video embebido de Playwright.
+9. Como respaldo, descargar el artifact `stocklens-v04-playwright-evidence` o
+   abrir los links presignados del summary.
+10. Mostrar deploy solo despues de pasar el quality gate.
 
 Mensaje:
 

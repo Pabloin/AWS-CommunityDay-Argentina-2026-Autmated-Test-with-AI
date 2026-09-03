@@ -38,7 +38,8 @@ pipelines de GitHub Actions con OIDC hacia AWS:
 | --- | --- |
 | S3 | Buckets privados para front web/mobile y evidencia. |
 | S3 Playwright Evidence | Bucket privado para videos, traces y reportes de Playwright. |
-| CloudFront | HTTPS publico para frontends. |
+| S3 Admin Evidence Viewer | Bucket privado para el visor estatico de evidencia Playwright. |
+| CloudFront | HTTPS publico para frontends y visor admin. |
 | ACM | Certificado separado para dominios v04. |
 | Route53 | Validacion DNS y alias records. |
 | API Gateway HTTP API | Entrada publica del backend. |
@@ -83,10 +84,11 @@ Purpose   = segun el recurso
 
 ## Dominios
 
-- Web/admin: `stock-v4.lens.glaciar.org`
+- Web: `stock-v4.lens.glaciar.org`
 - Mobile: `mobile-v4.lens.glaciar.org`
+- Admin/evidencia: `admin-v4.lens.glaciar.org`
 
-Terraform debe crear un certificado ACM en `us-east-1` para ambos nombres y
+Terraform debe crear un certificado ACM en `us-east-1` para esos nombres y
 validarlo con Route53 en la hosted zone existente `Z05243802169NOT55L8H8`.
 
 ## Estado Terraform
@@ -165,8 +167,10 @@ npx --prefix front_web playwright install --with-deps chromium
 npm --prefix front_web exec playwright test -- --config=front_web/playwright.config.ts
 upload artifact stocklens-v04-playwright-evidence con video, trace y reporte HTML
 aws s3 sync de evidencia Playwright a s3://stocklens-v04-playwright-evidence-ACCOUNT/runs/RUN_ID/ATTEMPT/
+generacion y publicacion de indice front_admin/dist/evidence/index.json incluso si Playwright falla
 aws s3 sync front_web/dist s3://stocklens-v04-front-web-ACCOUNT
 aws s3 sync front_mobile/dist s3://stocklens-v04-front-mobile-ACCOUNT
+aws s3 sync front_admin/dist s3://stocklens-v04-front-admin-ACCOUNT
 aws lambda update-function-code --function-name stocklens-v04-api
 aws cloudfront create-invalidation
 ```
@@ -225,6 +229,7 @@ Demo positiva:
 - Push a `master`.
 - Mostrar el workflow verde.
 - Abrir `https://stock-v4.lens.glaciar.org`.
+- Abrir `https://admin-v4.lens.glaciar.org` y reproducir el video de Playwright.
 
 ## Excluido De v04
 

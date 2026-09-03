@@ -80,6 +80,12 @@ variable "mobile_domain_name" {
   default     = "mobile-v4.lens.glaciar.org"
 }
 
+variable "admin_domain_name" {
+  description = "Public DNS name for the StockLens Playwright evidence admin frontend."
+  type        = string
+  default     = "admin-v4.lens.glaciar.org"
+}
+
 variable "default_tenant_id" {
   description = "Initial tenant enabled for the demo."
   type        = string

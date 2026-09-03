@@ -33,6 +33,11 @@ output "mobile_url" {
   value       = "https://${var.mobile_domain_name}"
 }
 
+output "admin_url" {
+  description = "Public HTTPS URL for the Playwright evidence admin frontend."
+  value       = "https://${var.admin_domain_name}"
+}
+
 output "front_web_cloudfront_domain" {
   description = "CloudFront domain for the web/admin frontend."
   value       = aws_cloudfront_distribution.front_web.domain_name
@@ -43,6 +48,11 @@ output "front_mobile_cloudfront_domain" {
   value       = aws_cloudfront_distribution.front_mobile.domain_name
 }
 
+output "front_admin_cloudfront_domain" {
+  description = "CloudFront domain for the Playwright evidence admin frontend."
+  value       = aws_cloudfront_distribution.front_admin.domain_name
+}
+
 output "front_web_bucket" {
   description = "S3 bucket for the web/admin frontend."
   value       = aws_s3_bucket.front_web.bucket
@@ -51,6 +61,11 @@ output "front_web_bucket" {
 output "front_mobile_bucket" {
   description = "S3 bucket for the mobile frontend."
   value       = aws_s3_bucket.front_mobile.bucket
+}
+
+output "front_admin_bucket" {
+  description = "S3 bucket for the Playwright evidence admin frontend."
+  value       = aws_s3_bucket.front_admin.bucket
 }
 
 output "evidence_bucket" {
@@ -86,6 +101,11 @@ output "front_web_distribution_id" {
 output "front_mobile_distribution_id" {
   description = "CloudFront distribution ID for the mobile frontend."
   value       = aws_cloudfront_distribution.front_mobile.id
+}
+
+output "front_admin_distribution_id" {
+  description = "CloudFront distribution ID for the Playwright evidence admin frontend."
+  value       = aws_cloudfront_distribution.front_admin.id
 }
 
 output "resource_group_name" {

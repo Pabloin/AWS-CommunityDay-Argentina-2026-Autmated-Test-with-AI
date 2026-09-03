@@ -42,6 +42,7 @@ data "aws_caller_identity" "current" {}
 locals {
   front_web_origin_id    = "${var.project_name}-front-web-origin"
   front_mobile_origin_id = "${var.project_name}-front-mobile-origin"
+  front_admin_origin_id  = "${var.project_name}-front-admin-origin"
   github_oidc_provider_arn = (
     var.github_oidc_provider_arn != ""
     ? var.github_oidc_provider_arn
@@ -77,6 +78,15 @@ resource "aws_s3_bucket" "front_mobile" {
   tags   = local.tags
 }
 
+resource "aws_s3_bucket" "front_admin" {
+  bucket = "${var.project_name}-front-admin-${data.aws_caller_identity.current.account_id}"
+
+  tags = merge(local.tags, {
+    Component = "frontend"
+    Purpose   = "playwright-evidence-admin"
+  })
+}
+
 resource "aws_s3_bucket" "evidence" {
   bucket = "${var.project_name}-evidence-${data.aws_caller_identity.current.account_id}"
   tags   = local.tags
@@ -102,6 +112,15 @@ resource "aws_s3_bucket_public_access_block" "front_web" {
 
 resource "aws_s3_bucket_public_access_block" "front_mobile" {
   bucket = aws_s3_bucket.front_mobile.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_public_access_block" "front_admin" {
+  bucket = aws_s3_bucket.front_admin.id
 
   block_public_acls       = true
   block_public_policy     = true
@@ -162,7 +181,8 @@ resource "aws_s3_bucket_cors_configuration" "evidence" {
     allowed_methods = ["GET", "PUT", "HEAD"]
     allowed_origins = [
       "https://${var.web_domain_name}",
-      "https://${var.mobile_domain_name}"
+      "https://${var.mobile_domain_name}",
+      "https://${var.admin_domain_name}"
     ]
     expose_headers  = ["ETag"]
     max_age_seconds = 300
@@ -181,7 +201,7 @@ resource "aws_acm_certificate" "frontends" {
   provider = aws.us_east_1
 
   domain_name               = var.web_domain_name
-  subject_alternative_names = [var.mobile_domain_name]
+  subject_alternative_names = [var.mobile_domain_name, var.admin_domain_name]
   validation_method         = "DNS"
 
   lifecycle {
@@ -327,6 +347,65 @@ resource "aws_cloudfront_distribution" "front_mobile" {
   tags = local.tags
 }
 
+resource "aws_cloudfront_distribution" "front_admin" {
+  enabled             = true
+  is_ipv6_enabled     = true
+  comment             = "StockLens Playwright evidence admin"
+  default_root_object = "index.html"
+  aliases             = [var.admin_domain_name]
+
+  origin {
+    domain_name              = aws_s3_bucket.front_admin.bucket_regional_domain_name
+    origin_access_control_id = aws_cloudfront_origin_access_control.frontends.id
+    origin_id                = local.front_admin_origin_id
+  }
+
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = local.front_admin_origin_id
+    viewer_protocol_policy = "redirect-to-https"
+    compress               = true
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "none"
+      }
+    }
+  }
+
+  custom_error_response {
+    error_code         = 403
+    response_code      = 200
+    response_page_path = "/index.html"
+  }
+
+  custom_error_response {
+    error_code         = 404
+    response_code      = 200
+    response_page_path = "/index.html"
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    acm_certificate_arn      = aws_acm_certificate_validation.frontends.certificate_arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
+  }
+
+  tags = merge(local.tags, {
+    Component = "frontend"
+    Purpose   = "playwright-evidence-admin"
+  })
+}
+
 resource "aws_s3_bucket_policy" "front_web" {
   bucket = aws_s3_bucket.front_web.id
 
@@ -371,6 +450,28 @@ resource "aws_s3_bucket_policy" "front_mobile" {
   })
 }
 
+resource "aws_s3_bucket_policy" "front_admin" {
+  bucket = aws_s3_bucket.front_admin.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid    = "AllowCloudFrontRead"
+      Effect = "Allow"
+      Principal = {
+        Service = "cloudfront.amazonaws.com"
+      }
+      Action   = "s3:GetObject"
+      Resource = "${aws_s3_bucket.front_admin.arn}/*"
+      Condition = {
+        StringEquals = {
+          "AWS:SourceArn" = aws_cloudfront_distribution.front_admin.arn
+        }
+      }
+    }]
+  })
+}
+
 resource "aws_route53_record" "front_web" {
   zone_id = data.aws_route53_zone.public.zone_id
   name    = var.web_domain_name
@@ -391,6 +492,18 @@ resource "aws_route53_record" "front_mobile" {
   alias {
     name                   = aws_cloudfront_distribution.front_mobile.domain_name
     zone_id                = aws_cloudfront_distribution.front_mobile.hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+
+resource "aws_route53_record" "front_admin" {
+  zone_id = data.aws_route53_zone.public.zone_id
+  name    = var.admin_domain_name
+  type    = "A"
+
+  alias {
+    name                   = aws_cloudfront_distribution.front_admin.domain_name
+    zone_id                = aws_cloudfront_distribution.front_admin.hosted_zone_id
     evaluate_target_health = false
   }
 }
@@ -820,6 +933,7 @@ resource "aws_iam_role_policy" "github_actions" {
         Resource = [
           aws_s3_bucket.front_web.arn,
           aws_s3_bucket.front_mobile.arn,
+          aws_s3_bucket.front_admin.arn,
           aws_s3_bucket.playwright_evidence.arn
         ]
       },
@@ -833,6 +947,7 @@ resource "aws_iam_role_policy" "github_actions" {
         Resource = [
           "${aws_s3_bucket.front_web.arn}/*",
           "${aws_s3_bucket.front_mobile.arn}/*",
+          "${aws_s3_bucket.front_admin.arn}/*",
           "${aws_s3_bucket.playwright_evidence.arn}/*"
         ]
       },
@@ -858,7 +973,8 @@ resource "aws_iam_role_policy" "github_actions" {
         ]
         Resource = [
           aws_cloudfront_distribution.front_web.arn,
-          aws_cloudfront_distribution.front_mobile.arn
+          aws_cloudfront_distribution.front_mobile.arn,
+          aws_cloudfront_distribution.front_admin.arn
         ]
       },
       {

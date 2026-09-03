@@ -17,6 +17,7 @@ env:
   PROJECT_NAME: stocklens-v04
   WEB_DOMAIN_NAME: stock-v4.lens.glaciar.org
   MOBILE_DOMAIN_NAME: mobile-v4.lens.glaciar.org
+  ADMIN_DOMAIN_NAME: admin-v4.lens.glaciar.org
   AI_TEST_STRICT_MODE: "true"
   ALLOW_AI_TEST_FALLBACK: "false"
 
@@ -108,11 +109,44 @@ jobs:
             echo
           } >> "$GITHUB_STEP_SUMMARY"
 
-          find front_web/test-results -name "*.webm" -print | while read -r video; do
-            key="${prefix}/test-results/${video#front_web/test-results/}"
-            url="$(aws s3 presign "s3://${bucket}/${key}" --expires-in 604800)"
-            echo "- [$(basename "$video")](${url})" >> "$GITHUB_STEP_SUMMARY"
-          done
+          if [ -d front_web/test-results ]; then
+            find front_web/test-results -name "*.webm" -print | while read -r video; do
+              key="${prefix}/test-results/${video#front_web/test-results/}"
+              url="$(aws s3 presign "s3://${bucket}/${key}" --expires-in 604800)"
+              echo "- [$(basename "$video")](${url})" >> "$GITHUB_STEP_SUMMARY"
+            done
+          fi
+
+      - name: Publish Playwright evidence index
+        if: always()
+        run: |
+          account_id="$(aws sts get-caller-identity --query Account --output text)"
+          evidence_bucket="${PROJECT_NAME}-playwright-evidence-${account_id}"
+          admin_bucket="${PROJECT_NAME}-front-admin-${account_id}"
+          prefix="runs/${GITHUB_RUN_ID}/${GITHUB_RUN_ATTEMPT}"
+
+          if ! aws s3api head-bucket --bucket "$evidence_bucket" >/dev/null 2>&1; then
+            echo "::warning title=Missing Playwright evidence bucket::${evidence_bucket} does not exist yet."
+            exit 0
+          fi
+
+          if ! aws s3api head-bucket --bucket "$admin_bucket" >/dev/null 2>&1; then
+            echo "::warning title=Missing admin bucket::${admin_bucket} does not exist yet."
+            exit 0
+          fi
+
+          aws s3 cp "s3://${admin_bucket}/evidence/index.json" front_admin/dist/evidence/index.previous.json >/dev/null 2>&1 || true
+          PLAYWRIGHT_EVIDENCE_BUCKET="$evidence_bucket" \
+          PLAYWRIGHT_EVIDENCE_PREFIX="$prefix" \
+          PLAYWRIGHT_EVIDENCE_STATUS="${{ job.status }}" \
+          node scripts/write-playwright-evidence-index.mjs
+          aws s3 sync "front_admin/dist/evidence/runs/${GITHUB_RUN_ID}/${GITHUB_RUN_ATTEMPT}" "s3://${evidence_bucket}/${prefix}/manifest" --delete
+          aws s3 sync front_admin/dist/evidence "s3://${admin_bucket}/evidence" --delete
+
+          admin_distribution_id="$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Quantity > \`0\` && contains(Aliases.Items, '${ADMIN_DOMAIN_NAME}')].Id | [0]" --output text)"
+          if [ "$admin_distribution_id" != "None" ] && [ -n "$admin_distribution_id" ]; then
+            aws cloudfront create-invalidation --distribution-id "$admin_distribution_id" --paths "/evidence/*"
+          fi
 
       - name: Resolve AWS resource names
         id: resources
@@ -120,24 +154,39 @@ jobs:
           account_id="$(aws sts get-caller-identity --query Account --output text)"
           web_bucket="${PROJECT_NAME}-front-web-${account_id}"
           mobile_bucket="${PROJECT_NAME}-front-mobile-${account_id}"
+          admin_bucket="${PROJECT_NAME}-front-admin-${account_id}"
           web_distribution_id="${{ vars.STOCKLENS_V04_FRONT_WEB_DISTRIBUTION_ID }}"
           mobile_distribution_id="${{ vars.STOCKLENS_V04_FRONT_MOBILE_DISTRIBUTION_ID }}"
+          admin_distribution_id="${{ vars.STOCKLENS_V04_FRONT_ADMIN_DISTRIBUTION_ID }}"
           if [ -z "$web_distribution_id" ]; then
             web_distribution_id="$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Quantity > \`0\` && contains(Aliases.Items, '${WEB_DOMAIN_NAME}')].Id | [0]" --output text)"
           fi
           if [ -z "$mobile_distribution_id" ]; then
             mobile_distribution_id="$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Quantity > \`0\` && contains(Aliases.Items, '${MOBILE_DOMAIN_NAME}')].Id | [0]" --output text)"
           fi
+          if [ -z "$admin_distribution_id" ]; then
+            admin_distribution_id="$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Quantity > \`0\` && contains(Aliases.Items, '${ADMIN_DOMAIN_NAME}')].Id | [0]" --output text)"
+          fi
           echo "web_bucket=$web_bucket" >> "$GITHUB_OUTPUT"
           echo "mobile_bucket=$mobile_bucket" >> "$GITHUB_OUTPUT"
+          echo "admin_bucket=$admin_bucket" >> "$GITHUB_OUTPUT"
           echo "web_distribution_id=$web_distribution_id" >> "$GITHUB_OUTPUT"
           echo "mobile_distribution_id=$mobile_distribution_id" >> "$GITHUB_OUTPUT"
+          echo "admin_distribution_id=$admin_distribution_id" >> "$GITHUB_OUTPUT"
 
       - name: Deploy web frontend
         run: aws s3 sync front_web/dist "s3://${{ steps.resources.outputs.web_bucket }}" --delete
 
       - name: Deploy mobile frontend
         run: aws s3 sync front_mobile/dist "s3://${{ steps.resources.outputs.mobile_bucket }}" --delete
+
+      - name: Deploy admin frontend
+        run: |
+          if ! aws s3api head-bucket --bucket "${{ steps.resources.outputs.admin_bucket }}" >/dev/null 2>&1; then
+            echo "::warning title=Missing admin bucket::${{ steps.resources.outputs.admin_bucket }} does not exist yet. Run the infrastructure workflow."
+            exit 0
+          fi
+          aws s3 sync front_admin/dist "s3://${{ steps.resources.outputs.admin_bucket }}" --delete
 
       - name: Deploy API Lambda
         run: aws lambda update-function-code --function-name "${PROJECT_NAME}-api" --zip-file fileb://backend/dist/api.zip
@@ -146,3 +195,6 @@ jobs:
         run: |
           aws cloudfront create-invalidation --distribution-id "${{ steps.resources.outputs.web_distribution_id }}" --paths "/*"
           aws cloudfront create-invalidation --distribution-id "${{ steps.resources.outputs.mobile_distribution_id }}" --paths "/*"
+          if [ "${{ steps.resources.outputs.admin_distribution_id }}" != "None" ] && [ -n "${{ steps.resources.outputs.admin_distribution_id }}" ]; then
+            aws cloudfront create-invalidation --distribution-id "${{ steps.resources.outputs.admin_distribution_id }}" --paths "/*"
+          fi
