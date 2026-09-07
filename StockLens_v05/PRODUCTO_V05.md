@@ -91,3 +91,10 @@ En pocos minutos, una cosa perdida en el galpon se vuelve una ficha visible,
 revisable y lista para decidir.
 ```
 
+## URL Cloud
+
+Cuando el pipeline de infraestructura y aplicacion hayan corrido:
+
+```text
+https://mobile-v5.lens.glaciar.org
+```

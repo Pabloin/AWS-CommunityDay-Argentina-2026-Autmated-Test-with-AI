@@ -1,0 +1,73 @@
+name: StockLens v05 Application
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - "StockLens_v05/front_mobile/**"
+      - ".github/workflows/stocklens-v05-app.yml"
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  PROJECT_NAME: stocklens-v05
+  MOBILE_DOMAIN_NAME: mobile-v5.lens.glaciar.org
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: StockLens_v05
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Check AWS app role secret
+        env:
+          ROLE_ARN: ${{ secrets.STOCKLENS_V05_APP_ROLE_ARN }}
+        run: |
+          if [ -z "$ROLE_ARN" ]; then
+            echo "::error title=Missing secret::Configure STOCKLENS_V05_APP_ROLE_ARN with the github_actions_app_role_arn Terraform output."
+            exit 1
+          fi
+
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.STOCKLENS_V05_APP_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: stocklens-v05-app
+          allowed-account-ids: "442809140287"
+
+      - name: Build mobile app
+        run: |
+          npm ci --prefix front_mobile --include=optional
+          npm rebuild --prefix front_mobile esbuild
+          npm --prefix front_mobile run build
+
+      - name: Resolve AWS resources
+        id: resources
+        run: |
+          account_id="$(aws sts get-caller-identity --query Account --output text)"
+          mobile_bucket="${PROJECT_NAME}-front-mobile-${account_id}"
+          mobile_distribution_id="${{ vars.STOCKLENS_V05_FRONT_MOBILE_DISTRIBUTION_ID }}"
+          if [ -z "$mobile_distribution_id" ]; then
+            mobile_distribution_id="$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Quantity > \`0\` && contains(Aliases.Items, '${MOBILE_DOMAIN_NAME}')].Id | [0]" --output text)"
+          fi
+          echo "mobile_bucket=$mobile_bucket" >> "$GITHUB_OUTPUT"
+          echo "mobile_distribution_id=$mobile_distribution_id" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy mobile app
+        run: aws s3 sync front_mobile/dist "s3://${{ steps.resources.outputs.mobile_bucket }}" --delete
+
+      - name: Invalidate CloudFront
+        run: aws cloudfront create-invalidation --distribution-id "${{ steps.resources.outputs.mobile_distribution_id }}" --paths "/*"
+
