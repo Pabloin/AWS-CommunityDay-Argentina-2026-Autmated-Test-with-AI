@@ -5,9 +5,11 @@ import {
   Camera,
   CheckCircle2,
   ClipboardList,
+  ListChecks,
   Minus,
   Plus,
   QrCode,
+  RotateCcw,
   Search,
   ShieldCheck,
   UploadCloud
@@ -41,6 +43,8 @@ type Draft = {
   labelText: string;
   photos: Photo[];
 };
+
+type ViewMode = "operate" | "create";
 
 const storageKey = "stocklens-mobile-state";
 const maxPhotos = 4;
@@ -174,6 +178,8 @@ function App() {
   const [selectedId, setSelectedId] = useState(initialAssets[0]?.id ?? "");
   const [draft, setDraft] = useState(emptyDraft);
   const [scanValue, setScanValue] = useState("");
+  const [viewMode, setViewMode] = useState<ViewMode>("operate");
+  const [scanMessage, setScanMessage] = useState("Listo para escanear una etiqueta QR.");
 
   useEffect(() => {
     localStorage.setItem(storageKey, JSON.stringify(assets));
@@ -182,6 +188,9 @@ function App() {
   const selected = assets.find((asset) => asset.id === selectedId) ?? assets[0];
   const lowStock = assets.filter((asset) => asset.quantity <= asset.minQuantity).length;
   const photoAssets = assets.filter((asset) => asset.photos.length).length;
+  const recentlyUpdated = [...assets]
+    .sort((left, right) => new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime())
+    .slice(0, 4);
 
   const addPhotos = async (files: FileList | null) => {
     if (!files?.length) return;
@@ -215,6 +224,9 @@ function App() {
     setAssets((current) => [asset, ...current]);
     setSelectedId(asset.id);
     setDraft(emptyDraft);
+    setScanValue(asset.id);
+    setScanMessage(`${asset.id} creado y seleccionado.`);
+    setViewMode("operate");
   };
 
   const updateAsset = (patch: Partial<Asset>) => {
@@ -227,28 +239,46 @@ function App() {
 
   const scan = () => {
     const id = parseScan(scanValue);
+    if (!id) {
+      setScanMessage("Ingresa o escanea un ID para buscar.");
+      return;
+    }
     const found = assets.find((asset) => asset.id === id);
-    if (found) setSelectedId(found.id);
+    if (found) {
+      setSelectedId(found.id);
+      setScanMessage(`${found.name} seleccionado.`);
+      return;
+    }
+    setScanMessage(`No encontre un activo con ID ${id}.`);
+  };
+
+  const selectAsset = (asset: Asset) => {
+    setSelectedId(asset.id);
+    setScanValue(asset.id);
+    setScanMessage(`${asset.name} seleccionado.`);
   };
 
   return (
     <main className="app">
       <header className="topbar">
-        <div className="brand-mark">
-          <QrCode size={22} />
+        <div className="brand-lockup">
+          <div className="brand-mark">
+            <QrCode size={22} />
+          </div>
+          <div>
+            <strong>StockLens</strong>
+            <span>Mobile v04</span>
+          </div>
         </div>
-        <div>
-          <strong>StockLens</strong>
-          <span>Mobile field app</span>
-        </div>
+        <span className="sync-pill">Demo local</span>
       </header>
 
       <section className="hero">
         <span className="eyebrow">
           <Camera size={15} /> Fotos + QR + stock
         </span>
-        <h1>Audita activos desde el celular.</h1>
-        <p>Alta rapida con fotos, etiquetas, ubicacion y QR listo para campo.</p>
+        <h1>Operar inventario en campo.</h1>
+        <p>Escanea, ajusta stock y deja evidencia sin perder el contexto del activo.</p>
       </section>
 
       <section className="stats">
@@ -266,13 +296,35 @@ function App() {
         </article>
       </section>
 
-      <section className="scan-card">
+      <nav className="mode-tabs" aria-label="Modo de trabajo">
+        <button
+          type="button"
+          className={viewMode === "operate" ? "active" : ""}
+          onClick={() => setViewMode("operate")}
+        >
+          <ListChecks size={17} /> Operar
+        </button>
+        <button
+          type="button"
+          className={viewMode === "create" ? "active" : ""}
+          onClick={() => setViewMode("create")}
+        >
+          <Plus size={17} /> Nuevo
+        </button>
+      </nav>
+
+      {viewMode === "operate" ? (
+        <>
+          <section className="scan-card">
         <label>
           Escanear o pegar ID
           <div className="scan-row">
             <input
               value={scanValue}
               onChange={(event) => setScanValue(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") scan();
+              }}
               placeholder="SL-MAT-001"
             />
             <button type="button" onClick={scan} aria-label="Buscar activo">
@@ -280,6 +332,30 @@ function App() {
             </button>
           </div>
         </label>
+        <p className="scan-message">{scanMessage}</p>
+      </section>
+
+      <section className="quick-list" aria-label="Activos recientes">
+        <div className="section-title">
+          <strong>Activos recientes</strong>
+          <span>{assets.length} total</span>
+        </div>
+        <div className="asset-list">
+          {recentlyUpdated.map((asset) => (
+            <button
+              key={asset.id}
+              type="button"
+              className={asset.id === selected?.id ? "active" : ""}
+              onClick={() => selectAsset(asset)}
+            >
+              <span>
+                <strong>{asset.name}</strong>
+                <small>{asset.id} - {asset.location}</small>
+              </span>
+              <em className={asset.quantity <= asset.minQuantity ? "low" : ""}>{asset.quantity}</em>
+            </button>
+          ))}
+        </div>
       </section>
 
       {selected ? (
@@ -298,6 +374,7 @@ function App() {
             <div>
               <strong>{selected.quantity}</strong>
               <span>en {selected.location}</span>
+              <small>minimo operativo: {selected.minQuantity}</small>
             </div>
             {selected.quantity <= selected.minQuantity ? (
               <AlertTriangle size={24} />
@@ -321,6 +398,9 @@ function App() {
             </button>
             <button type="button" onClick={() => updateAsset({ status: "review" })}>
               <ClipboardList size={18} /> Revisar
+            </button>
+            <button type="button" onClick={() => updateAsset({ status: "missing" })}>
+              <AlertTriangle size={18} /> Faltante
             </button>
           </div>
 
@@ -346,9 +426,17 @@ function App() {
       ) : null}
 
       {selected ? <QrCard asset={selected} /> : null}
+        </>
+      ) : null}
 
+      {viewMode === "create" ? (
       <section className="create-card">
-        <h2>Nuevo activo</h2>
+        <div className="section-title">
+          <h2>Nuevo activo</h2>
+          <button type="button" className="ghost-button" onClick={() => setDraft(emptyDraft)}>
+            <RotateCcw size={16} /> Limpiar
+          </button>
+        </div>
         <form onSubmit={createAsset}>
           <label>
             Nombre
@@ -422,6 +510,7 @@ function App() {
           </button>
         </form>
       </section>
+      ) : null}
     </main>
   );
 }

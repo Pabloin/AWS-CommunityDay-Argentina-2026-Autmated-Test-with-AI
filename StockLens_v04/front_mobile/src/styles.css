@@ -39,10 +39,17 @@ button {
   z-index: 2;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
   padding: 12px 0;
   background: rgba(238, 243, 239, 0.92);
   backdrop-filter: blur(12px);
+}
+
+.brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .brand-mark {
@@ -65,11 +72,23 @@ button {
   font-size: 13px;
 }
 
+.sync-pill {
+  border: 1px solid #cfded5;
+  border-radius: 999px;
+  padding: 7px 10px;
+  background: #fff;
+  color: #52625a;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
 .hero,
 .asset-card,
 .create-card,
 .scan-card,
-.qr-card {
+.qr-card,
+.quick-list {
   border: 1px solid #d8e4db;
   border-radius: 8px;
   background: #ffffff;
@@ -77,7 +96,7 @@ button {
 }
 
 .hero {
-  padding: 24px;
+  padding: 18px;
   color: #fff;
   background:
     linear-gradient(145deg, rgba(18, 56, 47, 0.96), rgba(27, 127, 99, 0.88)),
@@ -102,9 +121,9 @@ p {
 }
 
 .hero h1 {
-  margin: 18px 0 10px;
-  font-size: 42px;
-  line-height: 0.96;
+  margin: 16px 0 9px;
+  font-size: 34px;
+  line-height: 1;
   letter-spacing: 0;
 }
 
@@ -145,10 +164,46 @@ p {
   border-color: #ffd9a8;
 }
 
+.mode-tabs {
+  position: sticky;
+  top: 66px;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 12px 0;
+  padding: 6px;
+  border: 1px solid #d8e4db;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(12px);
+}
+
+.mode-tabs button,
+.ghost-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #52625a;
+  font-weight: 900;
+}
+
+.mode-tabs button.active {
+  background: #12382f;
+  color: #fff;
+  box-shadow: 0 10px 20px rgba(18, 56, 47, 0.16);
+}
+
 .scan-card,
 .asset-card,
 .create-card,
-.qr-card {
+.qr-card,
+.quick-list {
   margin-top: 12px;
   padding: 16px;
 }
@@ -205,6 +260,99 @@ form button,
   font-weight: 900;
 }
 
+.scan-message {
+  margin: 10px 0 0;
+  color: #52625a;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.section-title h2 {
+  margin: 0;
+}
+
+.section-title strong,
+.section-title span {
+  display: block;
+}
+
+.section-title span {
+  color: #68776f;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.ghost-button {
+  border: 1px solid #d8e4db;
+  padding: 8px 10px;
+  background: #f7fbf8;
+}
+
+.asset-list {
+  display: grid;
+  gap: 8px;
+}
+
+.asset-list button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 64px;
+  border: 1px solid #dce6df;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #fbfdfb;
+  color: #10231d;
+  text-align: left;
+}
+
+.asset-list button.active {
+  border-color: #1b7f63;
+  background: #eef8f3;
+}
+
+.asset-list strong,
+.asset-list small {
+  display: block;
+}
+
+.asset-list strong {
+  margin-bottom: 4px;
+  line-height: 1.2;
+}
+
+.asset-list small {
+  color: #68776f;
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.asset-list em {
+  display: grid;
+  place-items: center;
+  min-width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  background: #e8f4ee;
+  color: #116246;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.asset-list em.low {
+  background: #fff4e5;
+  color: #924700;
+}
+
 .asset-head {
   display: flex;
   justify-content: space-between;
@@ -255,7 +403,8 @@ form button,
 }
 
 .stock-line strong,
-.stock-line span {
+.stock-line span,
+.stock-line small {
   display: block;
 }
 
@@ -268,15 +417,29 @@ form button,
   color: #52625a;
 }
 
+.stock-line small {
+  margin-top: 4px;
+  color: #68776f;
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 
 .actions button {
   background: #eef8f3;
   color: #16624e;
+}
+
+.actions button:last-child {
+  grid-column: 1 / -1;
+  border-color: #d99a8a;
+  background: #fff1ed;
+  color: #9a321e;
 }
 
 .photo-grid,
