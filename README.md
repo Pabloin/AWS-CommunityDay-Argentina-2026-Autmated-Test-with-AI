@@ -14,12 +14,38 @@ hacia una arquitectura AWS.
 
 ## Aplicaciones Desplegadas
 
-| Version | App | URL | QR |
-| --- | --- | --- | --- |
-| v04 | Web/admin | [stock-v4.lens.glaciar.org](https://stock-v4.lens.glaciar.org) | ![QR StockLens v04 web](docs/qr/stocklens-v04-web.svg) |
-| v04 | Mobile campo | [mobile-v4.lens.glaciar.org](https://mobile-v4.lens.glaciar.org) | ![QR StockLens v04 mobile](docs/qr/stocklens-v04-mobile.svg) |
-| v04 | Admin evidencia | [admin-v4.lens.glaciar.org](https://admin-v4.lens.glaciar.org) | ![QR StockLens v04 admin](docs/qr/stocklens-v04-admin.svg) |
-| v05 | Mobile producto | [mobile-v5.lens.glaciar.org](https://mobile-v5.lens.glaciar.org) | ![QR StockLens v05 mobile](docs/qr/stocklens-v05-mobile.svg) |
+<table>
+  <tr>
+    <td align="center" width="25%" style="padding: 18px;">
+      <img src="docs/qr/stocklens-v04-web.svg" alt="QR StockLens v04 web" width="170" />
+      <br />
+      <strong>v04 Web/admin</strong>
+      <br />
+      <a href="https://stock-v4.lens.glaciar.org">stock-v4.lens.glaciar.org</a>
+    </td>
+    <td align="center" width="25%" style="padding: 18px;">
+      <img src="docs/qr/stocklens-v04-mobile.svg" alt="QR StockLens v04 mobile" width="170" />
+      <br />
+      <strong>v04 Mobile campo</strong>
+      <br />
+      <a href="https://mobile-v4.lens.glaciar.org">mobile-v4.lens.glaciar.org</a>
+    </td>
+    <td align="center" width="25%" style="padding: 18px;">
+      <img src="docs/qr/stocklens-v04-admin.svg" alt="QR StockLens v04 admin" width="170" />
+      <br />
+      <strong>v04 Admin evidencia</strong>
+      <br />
+      <a href="https://admin-v4.lens.glaciar.org">admin-v4.lens.glaciar.org</a>
+    </td>
+    <td align="center" width="25%" style="padding: 18px;">
+      <img src="docs/qr/stocklens-v05-mobile.svg" alt="QR StockLens v05 mobile" width="170" />
+      <br />
+      <strong>v05 Mobile producto</strong>
+      <br />
+      <a href="https://mobile-v5.lens.glaciar.org">mobile-v5.lens.glaciar.org</a>
+    </td>
+  </tr>
+</table>
 
 Estado verificado el 2026-09-07:
 
