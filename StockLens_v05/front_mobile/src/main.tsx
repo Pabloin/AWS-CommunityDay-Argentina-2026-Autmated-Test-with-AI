@@ -340,13 +340,21 @@ function App() {
     });
 
   const itemIdFromQr = (payload: string) => {
+    const cleanPayload = payload.trim();
     try {
-      const parsed = JSON.parse(payload);
-      return typeof parsed.id === "string" ? parsed.id : "";
+      const parsed = JSON.parse(cleanPayload);
+      for (const key of ["id", "assetId", "code", "labelCode"]) {
+        if (typeof parsed[key] === "string" && parsed[key].trim()) return parsed[key].trim();
+      }
     } catch {
-      const match = /SLV5-[A-Z0-9-]+/.exec(payload);
-      return match?.[0] ?? "";
+      const urlItem = /\/items\/([^/?#]+)/i.exec(cleanPayload);
+      if (urlItem?.[1]) return decodeURIComponent(urlItem[1]);
+      const stockLensCode = /SLV5-[A-Z0-9-]+/i.exec(cleanPayload);
+      if (stockLensCode?.[0]) return stockLensCode[0].toUpperCase();
+      if (/^[a-zA-Z0-9._:-]{3,120}$/.test(cleanPayload)) return cleanPayload;
+      return "";
     }
+    return "";
   };
 
   const scanQr = async (files: FileList | null) => {
