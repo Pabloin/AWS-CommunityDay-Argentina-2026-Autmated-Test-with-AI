@@ -135,6 +135,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "photos" {
     id     = "expire-demo-photos"
     status = "Enabled"
 
+    filter {
+      prefix = ""
+    }
+
     expiration {
       days = 14
     }
