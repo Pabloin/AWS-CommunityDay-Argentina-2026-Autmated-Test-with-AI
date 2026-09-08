@@ -14,33 +14,50 @@ hacia una arquitectura AWS.
 
 ## Aplicaciones Desplegadas
 
+### StockLens v04 - Demo tecnica del pipeline
+
+Version para mostrar la arquitectura del workshop: aplicacion web, experiencia
+mobile de campo y consola de evidencia para revisar artefactos de tests,
+videos de Playwright y resultados del pipeline con IA.
+
 <table>
   <tr>
-    <td align="center" width="25%" style="padding: 18px;">
-      <img src="docs/qr/stocklens-v04-web.svg" alt="QR StockLens v04 web" width="170" />
-      <br />
-      <strong>v04 Web/admin</strong>
-      <br />
-      <a href="https://stock-v4.lens.glaciar.org">stock-v4.lens.glaciar.org</a>
-    </td>
-    <td align="center" width="25%" style="padding: 18px;">
+    <td align="center" width="33%" style="padding: 18px;">
       <img src="docs/qr/stocklens-v04-mobile.svg" alt="QR StockLens v04 mobile" width="170" />
       <br />
-      <strong>v04 Mobile campo</strong>
+      <strong>Mobile campo</strong>
       <br />
       <a href="https://mobile-v4.lens.glaciar.org">mobile-v4.lens.glaciar.org</a>
     </td>
-    <td align="center" width="25%" style="padding: 18px;">
+    <td align="center" width="33%" style="padding: 18px;">
+      <img src="docs/qr/stocklens-v04-web.svg" alt="QR StockLens v04 web" width="170" />
+      <br />
+      <strong>Web admin</strong>
+      <br />
+      <a href="https://stock-v4.lens.glaciar.org">stock-v4.lens.glaciar.org</a>
+    </td>
+    <td align="center" width="33%" style="padding: 18px;">
       <img src="docs/qr/stocklens-v04-admin.svg" alt="QR StockLens v04 admin" width="170" />
       <br />
-      <strong>v04 Admin evidencia</strong>
+      <strong>Admin evidencia</strong>
       <br />
       <a href="https://admin-v4.lens.glaciar.org">admin-v4.lens.glaciar.org</a>
     </td>
-    <td align="center" width="25%" style="padding: 18px;">
+  </tr>
+</table>
+
+### StockLens v05 - Demo de producto mobile-first
+
+Version pensada para que alguien del publico se lleve la idea a su casa:
+catalogar objetos con fotos, analizarlos con IA y prepararlos para vender o
+administrar un inventario personal.
+
+<table>
+  <tr>
+    <td align="center" width="33%" style="padding: 18px;">
       <img src="docs/qr/stocklens-v05-mobile.svg" alt="QR StockLens v05 mobile" width="170" />
       <br />
-      <strong>v05 Mobile producto</strong>
+      <strong>Mobile producto</strong>
       <br />
       <a href="https://mobile-v5.lens.glaciar.org">mobile-v5.lens.glaciar.org</a>
     </td>
