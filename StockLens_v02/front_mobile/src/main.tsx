@@ -235,7 +235,8 @@ function App() {
     <main className="app">
       <header className="topbar">
         <div className="brand-mark">
-          <QrCode size={22} />
+          <QrCode className="brand-qr" size={27} strokeWidth={2.3} />
+          <Search className="brand-lens" size={15} strokeWidth={3} aria-hidden="true" />
         </div>
         <div>
           <strong>StockLens</strong>

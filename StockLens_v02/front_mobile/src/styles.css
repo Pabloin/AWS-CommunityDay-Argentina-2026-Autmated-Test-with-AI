@@ -50,9 +50,28 @@ button {
   place-items: center;
   width: 42px;
   height: 42px;
-  border-radius: 8px;
-  background: #12382f;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(19, 94, 68, 0.18);
+  border-radius: 13px;
+  background: linear-gradient(145deg, #155a46, #0b2d25);
   color: #fff;
+  box-shadow: 0 8px 16px rgba(18, 56, 47, 0.22);
+}
+
+.brand-qr {
+  opacity: 0.92;
+}
+
+.brand-lens {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  padding: 2px;
+  border-radius: 50%;
+  background: #d7ff6c;
+  color: #12382f;
+  box-sizing: content-box;
 }
 
 .topbar strong,

@@ -225,16 +225,29 @@ function QrPanel({ item }: { item: Item }) {
   }, [item.id]);
 
   return (
-    <div className="qr-panel">
-      {qr ? <img src={qr} alt={`QR ${item.name}`} /> : <div className="qr-empty" />}
-      <div>
-        <strong>Etiqueta QR</strong>
-        <span>{item.id}</span>
+    <section className="organize-preview" aria-label={`Vista previa de ${item.name}`}>
+      <div className="preview-photo">
+        {item.photos[0] ? (
+          <img src={item.photos[0]} alt={`Foto de ${item.name}`} />
+        ) : (
+          <div className="preview-photo-empty">
+            <PackageCheck size={28} />
+            <span>Sin foto</span>
+          </div>
+        )}
       </div>
-      <a href={qr} download={`${item.id}.png`}>
-        Descargar
-      </a>
-    </div>
+      <div className="qr-panel">
+        {qr ? <img src={qr} alt={`QR ${item.name}`} /> : <div className="qr-empty" />}
+        <div>
+          <strong>Etiqueta QR</strong>
+          <span>{item.id}</span>
+          <small>Escaneá para abrir este objeto.</small>
+        </div>
+        <a href={qr} download={`${item.id}.png`}>
+          Descargar
+        </a>
+      </div>
+    </section>
   );
 }
 
@@ -409,9 +422,15 @@ function App() {
   return (
     <main className="app-shell">
       <header className="app-header">
-        <div>
-          <span>StockLens v05</span>
-          <strong>Mis cosas</strong>
+        <div className="brand-lockup">
+          <div className="brand-mark" aria-label="StockLens: QR y lente">
+            <QrCode className="brand-qr" size={27} strokeWidth={2.3} />
+            <Search className="brand-lens" size={15} strokeWidth={3} aria-hidden="true" />
+          </div>
+          <div>
+            <span>StockLens v05</span>
+            <strong>Mis cosas</strong>
+          </div>
         </div>
         <button type="button" onClick={() => setMode("capture")} aria-label="Agregar objeto">
           <Plus size={20} />
