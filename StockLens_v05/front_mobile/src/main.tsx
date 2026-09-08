@@ -6,9 +6,11 @@ import {
   Check,
   ChevronRight,
   Clipboard,
+  Cloud,
+  CloudOff,
   DollarSign,
-  Home,
   ImagePlus,
+  Loader2,
   PackageCheck,
   Plus,
   QrCode,
@@ -48,6 +50,14 @@ type Draft = {
   checklist: string[];
   aiTags: string[];
   listingText: string;
+};
+
+type ApiPhoto = {
+  url: string;
+};
+
+type ApiItem = Omit<Item, "photos"> & {
+  photos?: ApiPhoto[];
 };
 
 type AiSuggestion = {
@@ -149,6 +159,13 @@ function loadItems() {
   }
 }
 
+function fromApiItem(item: ApiItem): Item {
+  return {
+    ...item,
+    photos: (item.photos ?? []).map((photo) => photo.url)
+  };
+}
+
 function makeId(name: string) {
   const prefix = name
     .normalize("NFD")
@@ -166,6 +183,12 @@ function money(value: number) {
     currency: "ARS",
     maximumFractionDigits: 0
   }).format(value);
+}
+
+function CloudIcon({ state }: { state: "loading" | "ready" | "local" | "saving" }) {
+  if (state === "loading" || state === "saving") return <Loader2 size={16} className="spin" />;
+  if (state === "ready") return <Cloud size={16} />;
+  return <CloudOff size={16} />;
 }
 
 function toDataUrl(file: File) {
@@ -224,6 +247,8 @@ function App() {
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [analysisState, setAnalysisState] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const [analysisMessage, setAnalysisMessage] = useState("");
+  const [cloudState, setCloudState] = useState<"loading" | "ready" | "local" | "saving">("loading");
+  const [cloudMessage, setCloudMessage] = useState("Sincronizando catalogo...");
   const selected = items.find((item) => item.id === selectedId) ?? items[0];
   const ready = items.filter((item) => item.status === "ready" || item.status === "published");
   const pending = items.filter((item) => item.status === "review").length;
@@ -234,6 +259,31 @@ function App() {
   useEffect(() => {
     localStorage.setItem(storageKey, JSON.stringify(items));
   }, [items]);
+
+  useEffect(() => {
+    if (!apiBaseUrl) {
+      setCloudState("local");
+      setCloudMessage("Modo local: esta build no tiene API configurada.");
+      return;
+    }
+
+    fetch(`${apiBaseUrl}/items`)
+      .then(async (result) => {
+        if (!result.ok) throw new Error("No se pudo leer el catalogo cloud.");
+        const payload = (await result.json()) as { items?: ApiItem[] };
+        const cloudItems = (payload.items ?? []).map(fromApiItem);
+        if (cloudItems.length) {
+          setItems(cloudItems);
+          setSelectedId(cloudItems[0].id);
+        }
+        setCloudState("ready");
+        setCloudMessage(cloudItems.length ? "Catalogo cloud sincronizado." : "Catalogo cloud listo para cargar objetos.");
+      })
+      .catch((error) => {
+        setCloudState("local");
+        setCloudMessage(error instanceof Error ? error.message : "Usando catalogo local.");
+      });
+  }, []);
 
   const addDraftPhotos = async (files: FileList | null) => {
     if (!files?.length) return;
@@ -287,7 +337,7 @@ function App() {
     }
   };
 
-  const createItem = (event: React.FormEvent) => {
+  const createItem = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!draft.name.trim()) return;
 
@@ -305,12 +355,34 @@ function App() {
       updatedAt: new Date().toISOString()
     };
 
-    setItems((current) => [item, ...current]);
-    setSelectedId(item.id);
-    setDraft(emptyDraft);
-    setAnalysisState("idle");
-    setAnalysisMessage("");
-    setMode("organize");
+    setCloudState("saving");
+    setCloudMessage("Guardando objeto y fotos en AWS...");
+
+    try {
+      if (!apiBaseUrl) throw new Error("API no configurada.");
+      const result = await fetch(`${apiBaseUrl}/items`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(item)
+      });
+      const payload = await result.json();
+      if (!result.ok) throw new Error(payload.message ?? "No se pudo guardar en AWS.");
+      const savedItem = fromApiItem(payload as ApiItem);
+      setItems((current) => [savedItem, ...current.filter((currentItem) => currentItem.id !== savedItem.id)]);
+      setSelectedId(savedItem.id);
+      setCloudState("ready");
+      setCloudMessage("Objeto guardado en DynamoDB y fotos en S3.");
+    } catch (error) {
+      setItems((current) => [item, ...current]);
+      setSelectedId(item.id);
+      setCloudState("local");
+      setCloudMessage(error instanceof Error ? `${error.message} Quedo guardado localmente.` : "Quedo guardado localmente.");
+    } finally {
+      setDraft(emptyDraft);
+      setAnalysisState("idle");
+      setAnalysisMessage("");
+      setMode("organize");
+    }
   };
 
   const updateItem = (patch: Partial<Item>) => {
@@ -358,6 +430,11 @@ function App() {
           <strong>{items.length}</strong>
           <span>objetos</span>
         </div>
+      </section>
+
+      <section className={`cloud-banner ${cloudState}`}>
+        <CloudIcon state={cloudState} />
+        <span>{cloudMessage}</span>
       </section>
 
       <nav className="tabs" aria-label="Secciones">

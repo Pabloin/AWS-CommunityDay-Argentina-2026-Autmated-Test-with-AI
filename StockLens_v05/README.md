@@ -59,6 +59,7 @@ Dominio propuesto:
 
 ```text
 https://mobile-v5.lens.glaciar.org
+https://admin-v5.lens.glaciar.org
 ```
 
 La infraestructura vive en:
@@ -73,9 +74,29 @@ Backend:
 StockLens_v05/backend
 ```
 
-El backend expone `POST /analyze`: recibe una imagen como data URL, llama a
-Amazon Bedrock con un modelo multimodal y devuelve sugerencias estructuradas
-para completar el catalogo.
+El backend expone una API serverless:
+
+- `GET /health`: estado de API y storage.
+- `POST /analyze`: recibe una imagen como data URL, llama a Amazon Bedrock con
+  un modelo multimodal y devuelve sugerencias estructuradas.
+- `GET /items`: lista el catalogo compartido.
+- `POST /items`: guarda metadata en DynamoDB y fotos en S3.
+- `GET /items/{id}`: devuelve un objeto con URLs firmadas de sus fotos.
+
+La vista mobile consume esa API para crear objetos desde el celular. La vista
+admin muestra desde una notebook el catalogo compartido, incluyendo fotos,
+tags, checklist y estado de venta.
+
+Recursos principales:
+
+- S3 + CloudFront para `mobile-v5`.
+- S3 + CloudFront para `admin-v5`.
+- API Gateway HTTP API.
+- Lambda Node.js.
+- DynamoDB `stocklens-v05-items`.
+- S3 privado `stocklens-v05-photos-*` para fotos, con lifecycle de demo.
+- Amazon Bedrock para sugerencias desde imagen.
+- Resource Group por tags para ver el stack del tenant v5 consolidado.
 
 El state remoto usa el mismo bucket de Terraform del workshop, con key separada:
 
@@ -116,9 +137,11 @@ github_actions_app_role_arn
 Esos valores deben cargarse como secrets v5 para que la operacion quede separada
 de v4.
 
-El workflow de aplicacion resuelve el HTTP API creado por Terraform, inyecta
-`VITE_API_BASE_URL` en el build mobile, sube el frontend a S3, actualiza la
-Lambda backend e invalida CloudFront.
+El workflow de infraestructura corre plan/apply desde GitHub Actions. El workflow
+de aplicacion corre por cambios de frontend/backend y tambien despues de un
+apply exitoso de infraestructura. Resuelve el HTTP API creado por Terraform,
+inyecta `VITE_API_BASE_URL` en el build mobile, genera `front_admin/config.js`,
+sube ambos frontends a S3, actualiza la Lambda backend e invalida CloudFront.
 
 ## CloudFront
 

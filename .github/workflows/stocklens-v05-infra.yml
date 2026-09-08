@@ -11,6 +11,11 @@ on:
         options:
           - "false"
           - "true"
+  push:
+    branches: [master]
+    paths:
+      - "StockLens_v05/terraform/**"
+      - ".github/workflows/stocklens-v05-infra.yml"
   pull_request:
     paths:
       - "StockLens_v05/terraform/**"
@@ -74,9 +79,9 @@ jobs:
         run: terraform plan -out=tfplan
 
       - name: Terraform apply
-        if: github.event_name == 'workflow_dispatch' && inputs.apply == 'true'
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.apply == 'true')
         run: terraform apply -auto-approve tfplan
 
       - name: Terraform outputs
-        if: github.event_name == 'workflow_dispatch' && inputs.apply == 'true'
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.apply == 'true')
         run: terraform output

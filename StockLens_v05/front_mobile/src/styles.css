@@ -137,6 +137,47 @@ button {
   font-weight: 900;
 }
 
+.cloud-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  border: 1px solid #d6dfd8;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #fff;
+  color: #536057;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.cloud-banner.ready {
+  border-color: #9fcab2;
+  background: #edf7f1;
+  color: #126142;
+}
+
+.cloud-banner.local {
+  border-color: #e0c894;
+  background: #fff8e8;
+  color: #7d510a;
+}
+
+.cloud-banner.saving,
+.cloud-banner.loading {
+  color: #216850;
+}
+
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .tabs {
   position: sticky;
   top: 70px;

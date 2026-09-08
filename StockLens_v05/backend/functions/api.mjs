@@ -1,7 +1,18 @@
+import { randomUUID } from "node:crypto";
 import { BedrockRuntimeClient, ConverseCommand } from "@aws-sdk/client-bedrock-runtime";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-const client = new BedrockRuntimeClient({});
+const bedrock = new BedrockRuntimeClient({});
+const dynamodb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
+const s3 = new S3Client({});
+
 const modelId = process.env.BEDROCK_MODEL_ID ?? "us.anthropic.claude-haiku-4-5-20251001-v1:0";
+const tableName = process.env.ITEMS_TABLE;
+const photosBucket = process.env.PHOTOS_BUCKET;
+const defaultTenantId = process.env.DEFAULT_TENANT_ID ?? "aws-cday-argentina-2026-v5";
 
 const corsHeaders = {
   "access-control-allow-origin": "*",
@@ -10,12 +21,23 @@ const corsHeaders = {
   "content-type": "application/json"
 };
 
+const now = () => new Date().toISOString();
+
 function response(statusCode, body) {
   return {
     statusCode,
     headers: corsHeaders,
     body: JSON.stringify(body)
   };
+}
+
+function parseBody(event) {
+  if (!event.body) return {};
+  return JSON.parse(event.isBase64Encoded ? Buffer.from(event.body, "base64").toString("utf8") : event.body);
+}
+
+function pathParts(event) {
+  return (event.rawPath ?? event.path ?? "/").split("/").filter(Boolean);
 }
 
 function parseDataUrl(dataUrl) {
@@ -30,7 +52,7 @@ function parseDataUrl(dataUrl) {
     throw new Error("La imagen es demasiado grande para analizarla.");
   }
 
-  return { format, bytes };
+  return { format, bytes, contentType: `image/${format}` };
 }
 
 function extractText(output) {
@@ -110,8 +132,150 @@ No inventes marca, edicion ni estado si no se ve. Si tenes duda, marcala como re
     ]
   });
 
-  const result = await client.send(command);
+  const result = await bedrock.send(command);
   return normalizeSuggestion(parseJson(extractText(result.output)));
+}
+
+function normalizeItem(input) {
+  return {
+    name: String(input.name ?? "Objeto sin nombre").slice(0, 100),
+    category: String(input.category ?? "Objeto").slice(0, 50),
+    location: String(input.location ?? "Sin ubicacion").slice(0, 100),
+    status: String(input.status ?? "review").slice(0, 30),
+    price: Number(input.price ?? 0),
+    notes: String(input.notes ?? "").slice(0, 1200),
+    checklist: Array.isArray(input.checklist) ? input.checklist.map(String).slice(0, 12) : [],
+    checked: Array.isArray(input.checked) ? input.checked.map(String).slice(0, 12) : [],
+    aiTags: Array.isArray(input.aiTags) ? input.aiTags.map(String).slice(0, 12) : [],
+    listingText: String(input.listingText ?? "").slice(0, 1200)
+  };
+}
+
+async function signPhotos(photoKeys) {
+  return Promise.all(
+    (photoKeys ?? []).map(async (photo) => ({
+      key: photo.key,
+      contentType: photo.contentType,
+      url: await getSignedUrl(
+        s3,
+        new GetObjectCommand({
+          Bucket: photosBucket,
+          Key: photo.key
+        }),
+        { expiresIn: 900 }
+      )
+    }))
+  );
+}
+
+function itemToResponse(item) {
+  return {
+    id: item.itemId,
+    name: item.name,
+    category: item.category,
+    location: item.location,
+    status: item.status,
+    price: item.price,
+    notes: item.notes,
+    checklist: item.checklist ?? [],
+    checked: item.checked ?? [],
+    aiTags: item.aiTags ?? [],
+    listingText: item.listingText ?? "",
+    createdAt: item.createdAt,
+    updatedAt: item.updatedAt,
+    photoCount: (item.photoKeys ?? []).length
+  };
+}
+
+async function itemWithPhotos(item) {
+  return {
+    ...itemToResponse(item),
+    photos: await signPhotos(item.photoKeys ?? [])
+  };
+}
+
+async function handleListItems() {
+  const result = await dynamodb.send(
+    new QueryCommand({
+      TableName: tableName,
+      KeyConditionExpression: "pk = :pk AND begins_with(sk, :item)",
+      ExpressionAttributeValues: {
+        ":pk": `TENANT#${defaultTenantId}`,
+        ":item": "ITEM#"
+      },
+      ScanIndexForward: false
+    })
+  );
+
+  return response(200, {
+    tenantId: defaultTenantId,
+    items: await Promise.all((result.Items ?? []).map(itemWithPhotos))
+  });
+}
+
+async function handleGetItem(itemId) {
+  const result = await dynamodb.send(
+    new GetCommand({
+      TableName: tableName,
+      Key: {
+        pk: `TENANT#${defaultTenantId}`,
+        sk: `ITEM#${itemId}`
+      }
+    })
+  );
+
+  if (!result.Item) return response(404, { error: "item_not_found" });
+  return response(200, await itemWithPhotos(result.Item));
+}
+
+async function uploadPhotos(itemId, photos) {
+  const nextPhotos = [];
+  for (const dataUrl of (photos ?? []).slice(0, 4)) {
+    const image = parseDataUrl(dataUrl);
+    const photoId = randomUUID();
+    const key = `tenants/${defaultTenantId}/items/${itemId}/photos/${photoId}.${image.format === "jpeg" ? "jpg" : image.format}`;
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: photosBucket,
+        Key: key,
+        Body: image.bytes,
+        ContentType: image.contentType,
+        Metadata: {
+          tenantId: defaultTenantId,
+          itemId,
+          photoId
+        }
+      })
+    );
+    nextPhotos.push({ key, contentType: image.contentType });
+  }
+  return nextPhotos;
+}
+
+async function handleCreateItem(event) {
+  const body = parseBody(event);
+  const itemId = body.id || `SLV5-${Date.now().toString(36).toUpperCase()}-${randomUUID().slice(0, 4).toUpperCase()}`;
+  const timestamp = now();
+  const item = {
+    pk: `TENANT#${defaultTenantId}`,
+    sk: `ITEM#${itemId}`,
+    entityType: "ITEM",
+    tenantId: defaultTenantId,
+    itemId,
+    ...normalizeItem(body),
+    photoKeys: await uploadPhotos(itemId, body.photos),
+    createdAt: timestamp,
+    updatedAt: timestamp
+  };
+
+  await dynamodb.send(
+    new PutCommand({
+      TableName: tableName,
+      Item: item
+    })
+  );
+
+  return response(201, await itemWithPhotos(item));
 }
 
 export async function handler(event) {
@@ -119,23 +283,45 @@ export async function handler(event) {
     return { statusCode: 204, headers: corsHeaders, body: "" };
   }
 
-  if (event.requestContext?.http?.method === "GET" && event.rawPath === "/health") {
-    return response(200, { service: "stocklens-v05-api", status: "ok" });
-  }
-
-  if (event.requestContext?.http?.method !== "POST" || event.rawPath !== "/analyze") {
-    return response(404, { error: "not_found" });
-  }
+  const method = event.requestContext?.http?.method;
+  const parts = pathParts(event);
 
   try {
-    const body = JSON.parse(event.body ?? "{}");
-    const suggestion = await analyzeImage(body.imageDataUrl);
-    return response(200, { suggestion });
+    if (method === "GET" && event.rawPath === "/health") {
+      return response(200, {
+        service: "stocklens-v05-api",
+        status: "ok",
+        storage: {
+          itemsTable: tableName,
+          photosBucket
+        }
+      });
+    }
+
+    if (method === "POST" && event.rawPath === "/analyze") {
+      const body = parseBody(event);
+      const suggestion = await analyzeImage(body.imageDataUrl);
+      return response(200, { suggestion });
+    }
+
+    if (method === "GET" && event.rawPath === "/items") {
+      return handleListItems();
+    }
+
+    if (method === "POST" && event.rawPath === "/items") {
+      return handleCreateItem(event);
+    }
+
+    if (method === "GET" && parts[0] === "items" && parts[1]) {
+      return handleGetItem(parts[1]);
+    }
+
+    return response(404, { error: "not_found" });
   } catch (error) {
     console.error(error);
-    return response(502, {
-      error: "image_analysis_failed",
-      message: error instanceof Error ? error.message : "No se pudo analizar la imagen."
+    return response(500, {
+      error: "api_error",
+      message: error instanceof Error ? error.message : "No se pudo completar la operacion."
     });
   }
 }

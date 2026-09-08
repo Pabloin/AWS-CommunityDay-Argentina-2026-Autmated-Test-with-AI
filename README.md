@@ -50,16 +50,24 @@ videos de Playwright y resultados del pipeline con IA.
 
 Version pensada para que alguien del publico se lleve la idea a su casa:
 catalogar objetos con fotos, analizarlos con IA y prepararlos para vender o
-administrar un inventario personal.
+administrar un inventario personal. La app mobile carga objetos y fotos; la
+vista admin permite ver el catalogo compartido desde una notebook.
 
 <table>
   <tr>
-    <td align="center" width="33%" style="padding: 18px;">
+    <td align="center" width="50%" style="padding: 18px;">
       <img src="docs/qr/stocklens-v05-mobile.svg" alt="QR StockLens v05 mobile" width="170" />
       <br />
       <strong>Mobile producto</strong>
       <br />
       <a href="https://mobile-v5.lens.glaciar.org">mobile-v5.lens.glaciar.org</a>
+    </td>
+    <td align="center" width="50%" style="padding: 18px;">
+      <img src="docs/qr/stocklens-v05-admin.svg" alt="QR StockLens v05 admin" width="170" />
+      <br />
+      <strong>Admin catalogo</strong>
+      <br />
+      <a href="https://admin-v5.lens.glaciar.org">admin-v5.lens.glaciar.org</a>
     </td>
   </tr>
 </table>

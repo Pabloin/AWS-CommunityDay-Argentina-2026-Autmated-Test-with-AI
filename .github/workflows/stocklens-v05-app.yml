@@ -2,10 +2,15 @@ name: StockLens v05 Application
 
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: ["StockLens v05 Infrastructure"]
+    types: [completed]
   push:
     branches: [master]
     paths:
       - "StockLens_v05/front_mobile/**"
+      - "StockLens_v05/front_admin/**"
+      - "StockLens_v05/backend/**"
       - ".github/workflows/stocklens-v05-app.yml"
 
 permissions:
@@ -16,9 +21,13 @@ env:
   AWS_REGION: us-east-1
   PROJECT_NAME: stocklens-v05
   MOBILE_DOMAIN_NAME: mobile-v5.lens.glaciar.org
+  ADMIN_DOMAIN_NAME: admin-v5.lens.glaciar.org
 
 jobs:
   build-and-deploy:
+    if: |
+      (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') &&
+      (github.event_name != 'push' || !contains(github.event.head_commit.message, '[infra-first]'))
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -65,18 +74,42 @@ jobs:
         run: |
           account_id="$(aws sts get-caller-identity --query Account --output text)"
           mobile_bucket="${PROJECT_NAME}-front-mobile-${account_id}"
+          admin_bucket="${PROJECT_NAME}-front-admin-${account_id}"
           mobile_distribution_id="${{ vars.STOCKLENS_V05_FRONT_MOBILE_DISTRIBUTION_ID }}"
+          admin_distribution_id="${{ vars.STOCKLENS_V05_FRONT_ADMIN_DISTRIBUTION_ID }}"
           if [ -z "$mobile_distribution_id" ]; then
             mobile_distribution_id="$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Quantity > \`0\` && contains(Aliases.Items, '${MOBILE_DOMAIN_NAME}')].Id | [0]" --output text)"
           fi
+          if [ -z "$admin_distribution_id" ]; then
+            admin_distribution_id="$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Quantity > \`0\` && contains(Aliases.Items, '${ADMIN_DOMAIN_NAME}')].Id | [0]" --output text)"
+          fi
+          if [ -z "$mobile_distribution_id" ] || [ "$mobile_distribution_id" = "None" ]; then
+            echo "::error title=Missing mobile CloudFront::Run StockLens v05 Infrastructure before deploying the app."
+            exit 1
+          fi
+          if [ -z "$admin_distribution_id" ] || [ "$admin_distribution_id" = "None" ]; then
+            echo "::error title=Missing admin CloudFront::Run StockLens v05 Infrastructure before deploying the app."
+            exit 1
+          fi
           echo "mobile_bucket=$mobile_bucket" >> "$GITHUB_OUTPUT"
+          echo "admin_bucket=$admin_bucket" >> "$GITHUB_OUTPUT"
           echo "mobile_distribution_id=$mobile_distribution_id" >> "$GITHUB_OUTPUT"
+          echo "admin_distribution_id=$admin_distribution_id" >> "$GITHUB_OUTPUT"
 
       - name: Deploy mobile app
         run: aws s3 sync front_mobile/dist "s3://${{ steps.resources.outputs.mobile_bucket }}" --delete
 
+      - name: Deploy admin app
+        run: |
+          api_endpoint="$(aws apigatewayv2 get-apis --query "Items[?Name=='${PROJECT_NAME}-http-api'].ApiEndpoint | [0]" --output text)"
+          printf 'window.STOCKLENS_API_BASE_URL = "%s";\n' "$api_endpoint" > front_admin/config.js
+          aws s3 sync front_admin "s3://${{ steps.resources.outputs.admin_bucket }}" --delete
+
       - name: Deploy API Lambda
         run: aws lambda update-function-code --function-name "${PROJECT_NAME}-api" --zip-file fileb://backend/dist/api.zip
 
-      - name: Invalidate CloudFront
+      - name: Invalidate mobile CloudFront
         run: aws cloudfront create-invalidation --distribution-id "${{ steps.resources.outputs.mobile_distribution_id }}" --paths "/*"
+
+      - name: Invalidate admin CloudFront
+        run: aws cloudfront create-invalidation --distribution-id "${{ steps.resources.outputs.admin_distribution_id }}" --paths "/*"
