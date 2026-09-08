@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   Archive,
@@ -265,6 +265,11 @@ function App() {
   const [cloudMessage, setCloudMessage] = useState("Sincronizando catalogo...");
   const [scanState, setScanState] = useState<"idle" | "loading" | "error">("idle");
   const [scanMessage, setScanMessage] = useState("");
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const frameRef = useRef<number | null>(null);
   const selected = items.find((item) => item.id === selectedId) ?? items[0];
   const ready = items.filter((item) => item.status === "ready" || item.status === "published");
   const pending = items.filter((item) => item.status === "review").length;
@@ -357,6 +362,97 @@ function App() {
     return "";
   };
 
+  const stopScanner = () => {
+    if (frameRef.current) {
+      window.cancelAnimationFrame(frameRef.current);
+      frameRef.current = null;
+    }
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+    setScannerOpen(false);
+  };
+
+  const openItemFromQrPayload = async (qrPayload: string) => {
+    if (!apiBaseUrl) throw new Error("API no configurada.");
+    const itemId = itemIdFromQr(qrPayload);
+    if (!itemId) throw new Error("El QR no contiene un ID de StockLens v05.");
+    const result = await fetch(`${apiBaseUrl}/items/${encodeURIComponent(itemId)}`);
+    const payload = await result.json();
+    if (!result.ok) throw new Error("Ese QR no existe en el catalogo cloud.");
+    const found = fromApiItem(payload as ApiItem);
+    setItems((current) => [found, ...current.filter((item) => item.id !== found.id)]);
+    setSelectedId(found.id);
+    setScanState("idle");
+    setScanMessage(`Ficha abierta: ${found.name}.`);
+    setMode("organize");
+  };
+
+  const readVideoFrame = async () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas || video.readyState < HTMLMediaElement.HAVE_ENOUGH_DATA) {
+      frameRef.current = window.requestAnimationFrame(readVideoFrame);
+      return;
+    }
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    if (!context) return;
+
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(imageData.data, imageData.width, imageData.height);
+    if (code?.data) {
+      try {
+        setScanMessage("QR detectado. Buscando ficha...");
+        await openItemFromQrPayload(code.data);
+        stopScanner();
+      } catch (error) {
+        setScanState("error");
+        setScanMessage(error instanceof Error ? error.message : "No se pudo abrir la ficha.");
+        frameRef.current = window.requestAnimationFrame(readVideoFrame);
+      }
+      return;
+    }
+
+    frameRef.current = window.requestAnimationFrame(readVideoFrame);
+  };
+
+  const startScanner = async () => {
+    setScanState("loading");
+    setScanMessage("Abrindo camara...");
+
+    try {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error("Este navegador no permite lectura de camara en vivo.");
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: "environment" }
+        },
+        audio: false
+      });
+      streamRef.current = stream;
+      setScannerOpen(true);
+      setScanMessage("Apunta al QR para abrir la ficha.");
+
+      window.setTimeout(() => {
+        if (!videoRef.current) return;
+        videoRef.current.srcObject = stream;
+        videoRef.current.play().catch(() => {
+          setScanState("error");
+          setScanMessage("Safari bloqueo la camara. Usa el fallback con foto.");
+        });
+        frameRef.current = window.requestAnimationFrame(readVideoFrame);
+      }, 0);
+    } catch (error) {
+      setScannerOpen(false);
+      setScanState("error");
+      setScanMessage(error instanceof Error ? error.message : "No se pudo abrir la camara.");
+    }
+  };
+
   const scanQr = async (files: FileList | null) => {
     const file = files?.[0];
     if (!file) return;
@@ -364,24 +460,15 @@ function App() {
     setScanMessage("Leyendo QR...");
 
     try {
-      if (!apiBaseUrl) throw new Error("API no configurada.");
       const qrPayload = await decodeQrFile(file);
-      const itemId = itemIdFromQr(qrPayload);
-      if (!itemId) throw new Error("El QR no contiene un ID de StockLens v05.");
-      const result = await fetch(`${apiBaseUrl}/items/${encodeURIComponent(itemId)}`);
-      const payload = await result.json();
-      if (!result.ok) throw new Error("Ese QR no existe en el catalogo cloud.");
-      const found = fromApiItem(payload as ApiItem);
-      setItems((current) => [found, ...current.filter((item) => item.id !== found.id)]);
-      setSelectedId(found.id);
-      setScanState("idle");
-      setScanMessage(`Ficha abierta: ${found.name}.`);
-      setMode("organize");
+      await openItemFromQrPayload(qrPayload);
     } catch (error) {
       setScanState("error");
       setScanMessage(error instanceof Error ? error.message : "No se pudo leer el QR.");
     }
   };
+
+  useEffect(() => stopScanner, []);
 
   const applySuggestion = (suggestion: AiSuggestion) => {
     const knownCategory = categoryChecklist[suggestion.category] ? suggestion.category : "Objeto";
@@ -563,12 +650,28 @@ function App() {
       {mode === "capture" ? (
         <section className="panel capture-panel">
           <form onSubmit={createItem}>
-            <label className={`qr-scan ${scanState}`}>
-              <input type="file" accept="image/*" capture="environment" onChange={(event) => scanQr(event.target.files)} />
+            <div className={`qr-scan ${scanState}`}>
               <QrCode size={24} />
               <strong>{scanState === "loading" ? "Leyendo..." : "Leer QR existente"}</strong>
               <span>{scanMessage || "Escanea una etiqueta para traer toda la ficha."}</span>
-            </label>
+              <div className="qr-scan-actions">
+                <button type="button" onClick={scannerOpen ? stopScanner : startScanner}>
+                  {scannerOpen ? "Cerrar camara" : "Apuntar camara"}
+                </button>
+                <label>
+                  Desde foto
+                  <input type="file" accept="image/*" capture="environment" onChange={(event) => scanQr(event.target.files)} />
+                </label>
+              </div>
+            </div>
+
+            {scannerOpen ? (
+              <div className="scanner-panel">
+                <video ref={videoRef} playsInline muted />
+                <canvas ref={canvasRef} aria-hidden="true" />
+                <span>Centra el QR dentro del recuadro.</span>
+              </div>
+            ) : null}
 
             <label className="photo-drop">
               <input type="file" accept="image/*" capture="environment" multiple onChange={(event) => addDraftPhotos(event.target.files)} />
