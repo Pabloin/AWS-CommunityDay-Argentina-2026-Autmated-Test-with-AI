@@ -56,12 +56,20 @@ function render() {
   grid.innerHTML = nextItems
     .map((item) => {
       const firstPhoto = item.photos?.[0]?.url;
+      const qrUrl = `${apiBaseUrl}${item.qrUrl || `/items/${encodeURIComponent(item.id)}/qr`}`;
       const tags = (item.aiTags ?? []).map((tag) => `<span>${escapeHtml(tag)}</span>`).join("");
       const checklist = (item.checklist ?? []).map((entry) => `<li>${escapeHtml(entry)}</li>`).join("");
       return `
         <article class="card">
           <div class="photo">${firstPhoto ? `<img src="${firstPhoto}" alt="${escapeHtml(item.name)}" />` : "Sin foto"}</div>
           <div class="content">
+            <div class="qr-block">
+              <img src="${qrUrl}" alt="QR ${escapeHtml(item.name)}" />
+              <div>
+                <strong>Etiqueta QR</strong>
+                <span>${escapeHtml(item.id)}</span>
+              </div>
+            </div>
             <div class="head">
               <div>
                 <h2>${escapeHtml(item.name)}</h2>

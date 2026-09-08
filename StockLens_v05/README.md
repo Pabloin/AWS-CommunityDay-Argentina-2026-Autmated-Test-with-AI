@@ -82,10 +82,12 @@ El backend expone una API serverless:
 - `GET /items`: lista el catalogo compartido.
 - `POST /items`: guarda metadata en DynamoDB y fotos en S3.
 - `GET /items/{id}`: devuelve un objeto con URLs firmadas de sus fotos.
+- `GET /items/{id}/qr`: genera el QR SVG de una ficha.
 
 La vista mobile consume esa API para crear objetos desde el celular. La vista
-admin muestra desde una notebook el catalogo compartido, incluyendo fotos,
-tags, checklist y estado de venta.
+mobile tambien puede leer un QR existente para traer la ficha completa desde la
+nube. La vista admin muestra desde una notebook el catalogo compartido,
+incluyendo fotos, QR, tags, checklist y estado de venta.
 
 Recursos principales:
 

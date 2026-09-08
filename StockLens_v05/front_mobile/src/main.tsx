@@ -20,6 +20,7 @@ import {
   X
 } from "lucide-react";
 import QRCode from "qrcode";
+import jsQR from "jsqr";
 import "./styles.css";
 
 type Status = "review" | "ready" | "published" | "sold" | "keep";
@@ -262,6 +263,8 @@ function App() {
   const [analysisMessage, setAnalysisMessage] = useState("");
   const [cloudState, setCloudState] = useState<"loading" | "ready" | "local" | "saving">("loading");
   const [cloudMessage, setCloudMessage] = useState("Sincronizando catalogo...");
+  const [scanState, setScanState] = useState<"idle" | "loading" | "error">("idle");
+  const [scanMessage, setScanMessage] = useState("");
   const selected = items.find((item) => item.id === selectedId) ?? items[0];
   const ready = items.filter((item) => item.status === "ready" || item.status === "published");
   const pending = items.filter((item) => item.status === "review").length;
@@ -304,6 +307,72 @@ function App() {
     setDraft((current) => ({ ...current, photos: [...current.photos, ...nextPhotos].slice(0, 4) }));
     setAnalysisState("idle");
     setAnalysisMessage("");
+  };
+
+  const decodeQrFile = (file: File) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const image = document.createElement("img");
+        image.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = image.naturalWidth;
+          canvas.height = image.naturalHeight;
+          const context = canvas.getContext("2d", { willReadFrequently: true });
+          if (!context) {
+            reject(new Error("No se pudo leer la imagen del QR."));
+            return;
+          }
+          context.drawImage(image, 0, 0);
+          const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+          const code = jsQR(imageData.data, imageData.width, imageData.height);
+          if (!code?.data) {
+            reject(new Error("No se detecto un QR legible."));
+            return;
+          }
+          resolve(code.data);
+        };
+        image.onerror = () => reject(new Error("Imagen de QR invalida."));
+        image.src = String(reader.result);
+      };
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+
+  const itemIdFromQr = (payload: string) => {
+    try {
+      const parsed = JSON.parse(payload);
+      return typeof parsed.id === "string" ? parsed.id : "";
+    } catch {
+      const match = /SLV5-[A-Z0-9-]+/.exec(payload);
+      return match?.[0] ?? "";
+    }
+  };
+
+  const scanQr = async (files: FileList | null) => {
+    const file = files?.[0];
+    if (!file) return;
+    setScanState("loading");
+    setScanMessage("Leyendo QR...");
+
+    try {
+      if (!apiBaseUrl) throw new Error("API no configurada.");
+      const qrPayload = await decodeQrFile(file);
+      const itemId = itemIdFromQr(qrPayload);
+      if (!itemId) throw new Error("El QR no contiene un ID de StockLens v05.");
+      const result = await fetch(`${apiBaseUrl}/items/${encodeURIComponent(itemId)}`);
+      const payload = await result.json();
+      if (!result.ok) throw new Error("Ese QR no existe en el catalogo cloud.");
+      const found = fromApiItem(payload as ApiItem);
+      setItems((current) => [found, ...current.filter((item) => item.id !== found.id)]);
+      setSelectedId(found.id);
+      setScanState("idle");
+      setScanMessage(`Ficha abierta: ${found.name}.`);
+      setMode("organize");
+    } catch (error) {
+      setScanState("error");
+      setScanMessage(error instanceof Error ? error.message : "No se pudo leer el QR.");
+    }
   };
 
   const applySuggestion = (suggestion: AiSuggestion) => {
@@ -486,6 +555,13 @@ function App() {
       {mode === "capture" ? (
         <section className="panel capture-panel">
           <form onSubmit={createItem}>
+            <label className={`qr-scan ${scanState}`}>
+              <input type="file" accept="image/*" capture="environment" onChange={(event) => scanQr(event.target.files)} />
+              <QrCode size={24} />
+              <strong>{scanState === "loading" ? "Leyendo..." : "Leer QR existente"}</strong>
+              <span>{scanMessage || "Escanea una etiqueta para traer toda la ficha."}</span>
+            </label>
+
             <label className="photo-drop">
               <input type="file" accept="image/*" capture="environment" multiple onChange={(event) => addDraftPhotos(event.target.files)} />
               <ImagePlus size={26} />

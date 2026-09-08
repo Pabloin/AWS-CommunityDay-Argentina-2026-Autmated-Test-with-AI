@@ -345,6 +345,45 @@ textarea:focus {
   text-align: center;
 }
 
+.qr-scan {
+  position: relative;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 4px 10px;
+  align-items: center;
+  border: 1px solid #bed0c4;
+  border-radius: 8px;
+  padding: 12px;
+  background: #edf6f0;
+  color: #17251f;
+}
+
+.qr-scan input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+
+.qr-scan svg {
+  grid-row: span 2;
+  color: #216850;
+}
+
+.qr-scan strong,
+.qr-scan span {
+  display: block;
+}
+
+.qr-scan span {
+  color: #536057;
+  font-size: 12px;
+}
+
+.qr-scan.error {
+  border-color: #e0ada1;
+  background: #fff2ee;
+}
+
 .photo-drop input {
   position: absolute;
   inset: 0;

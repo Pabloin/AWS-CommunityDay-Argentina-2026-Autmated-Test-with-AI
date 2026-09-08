@@ -4,6 +4,7 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import QRCode from "qrcode";
 
 const bedrock = new BedrockRuntimeClient({});
 const dynamodb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
@@ -28,6 +29,17 @@ function response(statusCode, body) {
     statusCode,
     headers: corsHeaders,
     body: JSON.stringify(body)
+  };
+}
+
+function textResponse(statusCode, contentType, body) {
+  return {
+    statusCode,
+    headers: {
+      ...corsHeaders,
+      "content-type": contentType
+    },
+    body
   };
 }
 
@@ -183,7 +195,9 @@ function itemToResponse(item) {
     listingText: item.listingText ?? "",
     createdAt: item.createdAt,
     updatedAt: item.updatedAt,
-    photoCount: (item.photoKeys ?? []).length
+    photoCount: (item.photoKeys ?? []).length,
+    qrPayload: JSON.stringify({ app: "StockLens-v05", id: item.itemId }),
+    qrUrl: `/items/${encodeURIComponent(item.itemId)}/qr`
   };
 }
 
@@ -226,6 +240,32 @@ async function handleGetItem(itemId) {
 
   if (!result.Item) return response(404, { error: "item_not_found" });
   return response(200, await itemWithPhotos(result.Item));
+}
+
+async function handleGetItemQr(itemId) {
+  const result = await dynamodb.send(
+    new GetCommand({
+      TableName: tableName,
+      Key: {
+        pk: `TENANT#${defaultTenantId}`,
+        sk: `ITEM#${itemId}`
+      }
+    })
+  );
+
+  if (!result.Item) return response(404, { error: "item_not_found" });
+
+  const svg = await QRCode.toString(JSON.stringify({ app: "StockLens-v05", id: itemId }), {
+    type: "svg",
+    margin: 1,
+    width: 240,
+    color: {
+      dark: "#17251f",
+      light: "#ffffff"
+    }
+  });
+
+  return textResponse(200, "image/svg+xml", svg);
 }
 
 async function uploadPhotos(itemId, photos) {
@@ -310,6 +350,10 @@ export async function handler(event) {
 
     if (method === "POST" && event.rawPath === "/items") {
       return handleCreateItem(event);
+    }
+
+    if (method === "GET" && parts[0] === "items" && parts[1] && parts[2] === "qr") {
+      return handleGetItemQr(parts[1]);
     }
 
     if (method === "GET" && parts[0] === "items" && parts[1]) {

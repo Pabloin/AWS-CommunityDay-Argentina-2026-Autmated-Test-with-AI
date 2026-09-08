@@ -152,6 +152,36 @@ select {
   padding: 14px;
 }
 
+.qr-block {
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  border: 1px solid #d3ddd5;
+  border-radius: 8px;
+  padding: 10px;
+  background: #fbfcfa;
+}
+
+.qr-block img {
+  width: 86px;
+  aspect-ratio: 1;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.qr-block strong,
+.qr-block span {
+  display: block;
+}
+
+.qr-block span {
+  margin-top: 4px;
+  color: #667269;
+  font-size: 12px;
+  font-weight: 900;
+}
+
 .head {
   display: flex;
   justify-content: space-between;
