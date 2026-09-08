@@ -49,9 +49,16 @@ jobs:
 
       - name: Build mobile app
         run: |
+          api_endpoint="$(aws apigatewayv2 get-apis --query "Items[?Name=='${PROJECT_NAME}-http-api'].ApiEndpoint | [0]" --output text)"
+          if [ -z "$api_endpoint" ] || [ "$api_endpoint" = "None" ]; then
+            echo "::error title=Missing API::Run StockLens v05 Infrastructure with apply=true before deploying the app."
+            exit 1
+          fi
           npm ci --prefix front_mobile --include=optional
           npm rebuild --prefix front_mobile esbuild
-          npm --prefix front_mobile run build
+          VITE_API_BASE_URL="$api_endpoint" npm --prefix front_mobile run build
+          npm ci --prefix backend
+          npm --prefix backend run package
 
       - name: Resolve AWS resources
         id: resources
@@ -68,6 +75,8 @@ jobs:
       - name: Deploy mobile app
         run: aws s3 sync front_mobile/dist "s3://${{ steps.resources.outputs.mobile_bucket }}" --delete
 
+      - name: Deploy API Lambda
+        run: aws lambda update-function-code --function-name "${PROJECT_NAME}-api" --zip-file fileb://backend/dist/api.zip
+
       - name: Invalidate CloudFront
         run: aws cloudfront create-invalidation --distribution-id "${{ steps.resources.outputs.mobile_distribution_id }}" --paths "/*"
-

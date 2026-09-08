@@ -17,6 +17,7 @@ La app no empieza como inventario tecnico. Empieza como captura:
 
 ```text
 Sacar foto
+  -> Bedrock sugiere que objeto es
   -> nombrar objeto
   -> marcar estado
   -> ubicarlo
@@ -66,6 +67,16 @@ La infraestructura vive en:
 StockLens_v05/terraform
 ```
 
+Backend:
+
+```text
+StockLens_v05/backend
+```
+
+El backend expone `POST /analyze`: recibe una imagen como data URL, llama a
+Amazon Bedrock con un modelo multimodal y devuelve sugerencias estructuradas
+para completar el catalogo.
+
 El state remoto usa el mismo bucket de Terraform del workshop, con key separada:
 
 ```text
@@ -104,6 +115,10 @@ github_actions_app_role_arn
 
 Esos valores deben cargarse como secrets v5 para que la operacion quede separada
 de v4.
+
+El workflow de aplicacion resuelve el HTTP API creado por Terraform, inyecta
+`VITE_API_BASE_URL` en el build mobile, sube el frontend a S3, actualiza la
+Lambda backend e invalida CloudFront.
 
 ## CloudFront
 

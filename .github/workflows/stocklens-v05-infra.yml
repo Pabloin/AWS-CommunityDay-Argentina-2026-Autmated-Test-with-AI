@@ -55,6 +55,12 @@ jobs:
           role-session-name: stocklens-v05-infra
           allowed-account-ids: "442809140287"
 
+      - name: Prepare Lambda package input
+        run: |
+          cd ..
+          npm ci --prefix backend
+          npm --prefix backend run package
+
       - name: Terraform fmt
         run: terraform fmt -check -recursive
 
@@ -74,4 +80,3 @@ jobs:
       - name: Terraform outputs
         if: github.event_name == 'workflow_dispatch' && inputs.apply == 'true'
         run: terraform output
-

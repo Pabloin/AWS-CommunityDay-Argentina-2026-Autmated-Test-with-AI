@@ -15,7 +15,6 @@ import {
   Search,
   Sparkles,
   Tag,
-  Trash2,
   X
 } from "lucide-react";
 import QRCode from "qrcode";
@@ -46,6 +45,21 @@ type Draft = {
   price: string;
   notes: string;
   photos: string[];
+  checklist: string[];
+  aiTags: string[];
+  listingText: string;
+};
+
+type AiSuggestion = {
+  name: string;
+  category: string;
+  description: string;
+  condition: string;
+  suggestedPriceLabel: string;
+  locationHint: string;
+  tags: string[];
+  checklist: string[];
+  listingText: string;
 };
 
 const storageKey = "stocklens-v05-home-catalog";
@@ -55,7 +69,8 @@ const categoryChecklist: Record<string, string[]> = {
   Libro: ["Tapa", "Lomo", "Autor", "Edicion", "Sin hojas sueltas"],
   Juguete: ["Foto principal", "Partes completas", "Estado visible", "Medidas"],
   Herramienta: ["Marca", "Funcionando", "Accesorios", "Estado de uso"],
-  Deporte: ["Foto completa", "Ruedas o soporte", "Rayones", "Medidas"]
+  Deporte: ["Foto completa", "Ruedas o soporte", "Rayones", "Medidas"],
+  Objeto: ["Foto principal", "Estado visible", "Medidas", "Descripcion revisada"]
 };
 
 const statusLabels: Record<Status, string> = {
@@ -115,8 +130,13 @@ const emptyDraft: Draft = {
   status: "review",
   price: "",
   notes: "",
-  photos: []
+  photos: [],
+  checklist: [],
+  aiTags: [],
+  listingText: ""
 };
+
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "";
 
 function loadItems() {
   const raw = localStorage.getItem(storageKey);
@@ -202,6 +222,8 @@ function App() {
   const [mode, setMode] = useState<Mode>("capture");
   const [query, setQuery] = useState("");
   const [draft, setDraft] = useState<Draft>(emptyDraft);
+  const [analysisState, setAnalysisState] = useState<"idle" | "loading" | "ready" | "error">("idle");
+  const [analysisMessage, setAnalysisMessage] = useState("");
   const selected = items.find((item) => item.id === selectedId) ?? items[0];
   const ready = items.filter((item) => item.status === "ready" || item.status === "published");
   const pending = items.filter((item) => item.status === "review").length;
@@ -217,6 +239,52 @@ function App() {
     if (!files?.length) return;
     const nextPhotos = await Promise.all(Array.from(files).slice(0, 4).map(toDataUrl));
     setDraft((current) => ({ ...current, photos: [...current.photos, ...nextPhotos].slice(0, 4) }));
+    setAnalysisState("idle");
+    setAnalysisMessage("");
+  };
+
+  const applySuggestion = (suggestion: AiSuggestion) => {
+    const knownCategory = categoryChecklist[suggestion.category] ? suggestion.category : "Objeto";
+    setDraft((current) => ({
+      ...current,
+      name: current.name || suggestion.name,
+      category: knownCategory,
+      location: current.location || suggestion.locationHint,
+      notes: [suggestion.description, suggestion.condition, suggestion.suggestedPriceLabel].filter(Boolean).join("\n"),
+      checklist: suggestion.checklist,
+      aiTags: suggestion.tags,
+      listingText: suggestion.listingText
+    }));
+  };
+
+  const analyzePhoto = async () => {
+    if (!draft.photos[0]) return;
+    if (!apiBaseUrl) {
+      setAnalysisState("error");
+      setAnalysisMessage("Esta build no tiene API de IA configurada.");
+      return;
+    }
+
+    setAnalysisState("loading");
+    setAnalysisMessage("Analizando objeto con Bedrock...");
+
+    try {
+      const result = await fetch(`${apiBaseUrl}/analyze`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ imageDataUrl: draft.photos[0] })
+      });
+      const payload = await result.json();
+      if (!result.ok) {
+        throw new Error(payload.message ?? "No se pudo analizar la imagen.");
+      }
+      applySuggestion(payload.suggestion as AiSuggestion);
+      setAnalysisState("ready");
+      setAnalysisMessage("Sugerencias cargadas. Revisalas antes de guardar.");
+    } catch (error) {
+      setAnalysisState("error");
+      setAnalysisMessage(error instanceof Error ? error.message : "No se pudo analizar la imagen.");
+    }
   };
 
   const createItem = (event: React.FormEvent) => {
@@ -231,7 +299,7 @@ function App() {
       status: draft.status,
       price: Number(draft.price) || 0,
       notes: draft.notes.trim(),
-      checklist: categoryChecklist[draft.category] ?? ["Foto principal", "Estado visible"],
+      checklist: draft.checklist.length ? draft.checklist : categoryChecklist[draft.category] ?? ["Foto principal", "Estado visible"],
       checked: draft.photos.length ? ["Foto principal"] : [],
       photos: draft.photos,
       updatedAt: new Date().toISOString()
@@ -240,6 +308,8 @@ function App() {
     setItems((current) => [item, ...current]);
     setSelectedId(item.id);
     setDraft(emptyDraft);
+    setAnalysisState("idle");
+    setAnalysisMessage("");
     setMode("organize");
   };
 
@@ -332,6 +402,22 @@ function App() {
                 {draft.photos.map((photo) => (
                   <img key={photo} src={photo} alt="Objeto capturado" />
                 ))}
+              </div>
+            ) : null}
+
+            {draft.photos.length ? (
+              <div className={`ai-panel ${analysisState}`}>
+                <button type="button" onClick={analyzePhoto} disabled={analysisState === "loading"}>
+                  <Sparkles size={18} /> {analysisState === "loading" ? "Analizando..." : "Analizar con IA"}
+                </button>
+                <p>{analysisMessage || "Bedrock puede sugerir nombre, descripcion, etiquetas y checklist."}</p>
+                {draft.aiTags.length ? (
+                  <div className="tag-row">
+                    {draft.aiTags.map((tag) => (
+                      <span key={tag}>{tag}</span>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             ) : null}
 

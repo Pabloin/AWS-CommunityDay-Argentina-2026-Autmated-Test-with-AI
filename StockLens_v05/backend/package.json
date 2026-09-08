@@ -1,0 +1,13 @@
+{
+  "name": "stocklens-v05-backend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "package": "mkdir -p dist && zip -qr dist/api.zip functions package.json node_modules"
+  },
+  "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.658.1"
+  }
+}
+

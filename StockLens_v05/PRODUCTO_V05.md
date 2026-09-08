@@ -16,7 +16,7 @@ No empieza con administracion. Empieza con captura.
 
 ```text
 Foto primero.
-Datos despues.
+IA sugiere datos despues.
 Decision al final.
 ```
 
@@ -30,12 +30,14 @@ sentir que esta ordenando objetos reales con el celular.
 Alta rapida de un objeto:
 
 - Foto.
-- Nombre.
-- Categoria.
+- Nombre sugerido por IA.
+- Categoria sugerida por IA.
 - Precio sugerido.
 - Ubicacion.
 - Estado.
 - Nota.
+- Etiquetas significativas.
+- Checklist sugerido por categoria/imagen.
 
 ### Organizar
 
@@ -98,3 +100,19 @@ Cuando el pipeline de infraestructura y aplicacion hayan corrido:
 ```text
 https://mobile-v5.lens.glaciar.org
 ```
+
+## IA En Producto
+
+La accion clave es `Analizar con IA` despues de subir una foto. La app envia la
+imagen a `POST /analyze`; una Lambda llama a Amazon Bedrock y devuelve:
+
+- nombre corto del objeto;
+- categoria;
+- descripcion;
+- estado visible o recomendacion de revision;
+- etiquetas;
+- checklist;
+- texto base para publicacion online.
+
+La persona siempre revisa antes de guardar. La IA acelera la carga, no decide
+por el usuario.

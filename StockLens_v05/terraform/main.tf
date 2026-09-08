@@ -216,6 +216,134 @@ resource "aws_route53_record" "front_mobile" {
   }
 }
 
+data "aws_iam_policy_document" "lambda_assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+resource "aws_iam_role" "lambda" {
+  name               = "${var.project_name}-lambda-role"
+  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
+
+  tags = merge(local.tags, {
+    Component = "backend"
+    Purpose   = "image-analysis-api"
+  })
+}
+
+resource "aws_iam_role_policy" "lambda" {
+  name = "${var.project_name}-lambda-policy"
+  role = aws_iam_role.lambda.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "bedrock:InvokeModel",
+          "bedrock:InvokeModelWithResponseStream"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_lambda_function" "api" {
+  function_name = "${var.project_name}-api"
+  role          = aws_iam_role.lambda.arn
+  handler       = "functions/api.handler"
+  runtime       = "nodejs20.x"
+  filename      = "${path.module}/../backend/dist/api.zip"
+  timeout       = 20
+  memory_size   = 512
+
+  source_code_hash = filebase64sha256("${path.module}/../backend/dist/api.zip")
+
+  environment {
+    variables = {
+      BEDROCK_MODEL_ID = var.bedrock_model_id
+    }
+  }
+
+  tags = merge(local.tags, {
+    Component = "backend"
+    Purpose   = "image-analysis-api"
+  })
+}
+
+resource "aws_apigatewayv2_api" "http" {
+  name          = "${var.project_name}-http-api"
+  protocol_type = "HTTP"
+
+  cors_configuration {
+    allow_headers = ["content-type"]
+    allow_methods = ["GET", "POST", "OPTIONS"]
+    allow_origins = ["https://${var.mobile_domain_name}", "http://127.0.0.1:5190"]
+  }
+
+  tags = merge(local.tags, {
+    Component = "backend"
+    Purpose   = "image-analysis-api"
+  })
+}
+
+resource "aws_apigatewayv2_integration" "lambda" {
+  api_id                 = aws_apigatewayv2_api.http.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.api.invoke_arn
+  payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "health" {
+  api_id    = aws_apigatewayv2_api.http.id
+  route_key = "GET /health"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+}
+
+resource "aws_apigatewayv2_route" "analyze" {
+  api_id    = aws_apigatewayv2_api.http.id
+  route_key = "POST /analyze"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+}
+
+resource "aws_apigatewayv2_stage" "default" {
+  api_id      = aws_apigatewayv2_api.http.id
+  name        = "$default"
+  auto_deploy = true
+
+  tags = merge(local.tags, {
+    Component = "backend"
+    Purpose   = "image-analysis-api"
+  })
+}
+
+resource "aws_lambda_permission" "api_gateway" {
+  statement_id  = "AllowApiGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.api.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.http.execution_arn}/*/*"
+}
+
 resource "aws_iam_openid_connect_provider" "github" {
   count = var.github_oidc_provider_arn == "" ? 1 : 0
 
@@ -290,6 +418,21 @@ resource "aws_iam_role_policy" "github_actions_app" {
           "cloudfront:ListDistributions"
         ]
         Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "apigateway:GET"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "lambda:GetFunction",
+          "lambda:UpdateFunctionCode"
+        ]
+        Resource = aws_lambda_function.api.arn
       }
     ]
   })
@@ -317,8 +460,11 @@ resource "aws_iam_role_policy" "github_actions_infra" {
         Effect = "Allow"
         Action = [
           "acm:*",
+          "apigateway:*",
           "cloudfront:*",
           "iam:*",
+          "lambda:*",
+          "logs:*",
           "route53:*",
           "s3:*",
           "sts:GetCallerIdentity"
@@ -328,4 +474,3 @@ resource "aws_iam_role_policy" "github_actions_infra" {
     ]
   })
 }
-

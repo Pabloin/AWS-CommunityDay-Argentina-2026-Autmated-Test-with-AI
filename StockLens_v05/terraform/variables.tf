@@ -86,3 +86,8 @@ variable "mobile_domain_name" {
   default     = "mobile-v5.lens.glaciar.org"
 }
 
+variable "bedrock_model_id" {
+  description = "Amazon Bedrock vision-capable model used to suggest item metadata from photos."
+  type        = string
+  default     = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
+}
