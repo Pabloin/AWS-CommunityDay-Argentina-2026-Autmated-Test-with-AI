@@ -270,6 +270,7 @@ function App() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const frameRef = useRef<number | null>(null);
+  const scanBusyRef = useRef(false);
   const selected = items.find((item) => item.id === selectedId) ?? items[0];
   const ready = items.filter((item) => item.status === "ready" || item.status === "published");
   const pending = items.filter((item) => item.status === "review").length;
@@ -330,7 +331,9 @@ function App() {
           }
           context.drawImage(image, 0, 0);
           const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-          const code = jsQR(imageData.data, imageData.width, imageData.height);
+          const code = jsQR(imageData.data, imageData.width, imageData.height, {
+            inversionAttempts: "attemptBoth"
+          });
           if (!code?.data) {
             reject(new Error("No se detecto un QR legible."));
             return;
@@ -369,6 +372,7 @@ function App() {
     }
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
+    scanBusyRef.current = false;
     setScannerOpen(false);
   };
 
@@ -390,7 +394,7 @@ function App() {
   const readVideoFrame = async () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    if (!video || !canvas || video.readyState < HTMLMediaElement.HAVE_ENOUGH_DATA) {
+    if (!video || !canvas || video.readyState < HTMLMediaElement.HAVE_ENOUGH_DATA || !video.videoWidth || !video.videoHeight) {
       frameRef.current = window.requestAnimationFrame(readVideoFrame);
       return;
     }
@@ -398,17 +402,25 @@ function App() {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     const context = canvas.getContext("2d", { willReadFrequently: true });
-    if (!context) return;
+    if (!context) {
+      frameRef.current = window.requestAnimationFrame(readVideoFrame);
+      return;
+    }
 
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
     const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-    const code = jsQR(imageData.data, imageData.width, imageData.height);
+    const code = jsQR(imageData.data, imageData.width, imageData.height, {
+      inversionAttempts: "attemptBoth"
+    });
     if (code?.data) {
+      if (scanBusyRef.current) return;
+      scanBusyRef.current = true;
       try {
         setScanMessage("QR detectado. Buscando ficha...");
         await openItemFromQrPayload(code.data);
         stopScanner();
       } catch (error) {
+        scanBusyRef.current = false;
         setScanState("error");
         setScanMessage(error instanceof Error ? error.message : "No se pudo abrir la ficha.");
         frameRef.current = window.requestAnimationFrame(readVideoFrame);
@@ -421,7 +433,7 @@ function App() {
 
   const startScanner = async () => {
     setScanState("loading");
-    setScanMessage("Abrindo camara...");
+    setScanMessage("Abriendo camara...");
 
     try {
       if (!navigator.mediaDevices?.getUserMedia) {
@@ -435,23 +447,43 @@ function App() {
       });
       streamRef.current = stream;
       setScannerOpen(true);
-      setScanMessage("Apunta al QR para abrir la ficha.");
-
-      window.setTimeout(() => {
-        if (!videoRef.current) return;
-        videoRef.current.srcObject = stream;
-        videoRef.current.play().catch(() => {
-          setScanState("error");
-          setScanMessage("Safari bloqueo la camara. Usa el fallback con foto.");
-        });
-        frameRef.current = window.requestAnimationFrame(readVideoFrame);
-      }, 0);
+      setScanMessage("Preparando camara...");
     } catch (error) {
       setScannerOpen(false);
       setScanState("error");
       setScanMessage(error instanceof Error ? error.message : "No se pudo abrir la camara.");
     }
   };
+
+  useEffect(() => {
+    if (!scannerOpen) return;
+
+    let cancelled = false;
+    const startVideo = async () => {
+      await new Promise((resolve) => window.requestAnimationFrame(resolve));
+      const video = videoRef.current;
+      const stream = streamRef.current;
+      if (cancelled || !video || !stream) return;
+
+      video.srcObject = stream;
+      try {
+        await video.play();
+        if (cancelled) return;
+        setScanState("loading");
+        setScanMessage("Camara activa. Apunta al QR para abrir la ficha.");
+        scanBusyRef.current = false;
+        frameRef.current = window.requestAnimationFrame(readVideoFrame);
+      } catch {
+        setScanState("error");
+        setScanMessage("Safari bloqueo la camara. Usa el fallback con foto.");
+      }
+    };
+
+    startVideo();
+    return () => {
+      cancelled = true;
+    };
+  }, [scannerOpen]);
 
   const scanQr = async (files: FileList | null) => {
     const file = files?.[0];
@@ -667,7 +699,7 @@ function App() {
 
             {scannerOpen ? (
               <div className="scanner-panel">
-                <video ref={videoRef} playsInline muted />
+                <video ref={videoRef} playsInline muted autoPlay />
                 <canvas ref={canvasRef} aria-hidden="true" />
                 <span>Centra el QR dentro del recuadro.</span>
               </div>
