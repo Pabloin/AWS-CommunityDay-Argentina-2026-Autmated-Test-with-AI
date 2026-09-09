@@ -31,20 +31,15 @@ button {
 .app-shell {
   width: min(520px, 100%);
   margin: 0 auto;
-  padding: 6px 14px 30px;
+  padding: 8px 14px 28px;
 }
 
 .app-header {
-  position: sticky;
-  top: 0;
-  z-index: 4;
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  min-height: 46px;
-  padding: 4px 0 8px;
-  background: rgba(247, 248, 245, 0.95);
-  backdrop-filter: blur(14px);
+  min-height: 38px;
+  padding: 2px 0 8px;
 }
 
 .brand-lockup {
@@ -55,27 +50,25 @@ button {
 
 .brand-logo {
   display: block;
-  width: min(142px, 43vw);
+  width: min(118px, 36vw);
   height: auto;
   flex: 0 0 auto;
   object-fit: contain;
-  filter: drop-shadow(0 5px 9px rgba(18, 56, 47, 0.1));
+  filter: drop-shadow(0 4px 7px rgba(18, 56, 47, 0.08));
 }
 
-.hero {
+.home-summary {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 72px;
   gap: 10px;
-  align-items: center;
   border: 1px solid #dce5df;
   border-radius: 8px;
   padding: 12px;
   background: #fff;
   color: #17251f;
-  box-shadow: 0 10px 24px rgba(29, 45, 36, 0.07);
+  box-shadow: 0 8px 20px rgba(29, 45, 36, 0.06);
 }
 
-.hero-pill {
+.home-copy span {
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -88,45 +81,51 @@ button {
   font-weight: 900;
 }
 
-.hero h1 {
-  margin: 10px 0 5px;
-  font-size: 28px;
-  line-height: 1.02;
+.home-copy strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 24px;
+  line-height: 1.05;
   letter-spacing: 0;
 }
 
-.hero p {
-  margin: 0;
+.home-copy p {
+  margin: 4px 0 0;
   color: #536057;
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.42;
 }
 
-.hero-card {
+.summary-pills {
   display: grid;
-  place-items: center;
-  align-content: center;
-  min-height: 72px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.summary-pills article {
+  min-height: 58px;
   border: 1px solid #bed0c4;
   border-radius: 8px;
-  background: #edf6f0;
+  padding: 9px 10px;
+  background: #f2f8f4;
   color: #216850;
 }
 
-.hero-card strong,
-.hero-card span {
+.summary-pills strong,
+.summary-pills span {
   display: block;
 }
 
-.hero-card strong {
-  font-size: 32px;
+.summary-pills strong {
+  font-size: 25px;
   line-height: 1;
 }
 
-.hero-card span {
+.summary-pills span {
   color: #536057;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 900;
+  text-transform: uppercase;
 }
 
 .cloud-banner {
@@ -171,9 +170,6 @@ button {
 }
 
 .tabs {
-  position: sticky;
-  top: 58px;
-  z-index: 3;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 6px;

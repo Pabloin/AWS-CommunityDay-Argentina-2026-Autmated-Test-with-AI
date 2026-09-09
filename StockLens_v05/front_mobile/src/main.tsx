@@ -611,21 +611,31 @@ function App() {
         </div>
       </header>
 
-      <section className="hero">
-        <div className="hero-copy">
-          <span className="hero-pill">
-            <Sparkles size={15} /> Foto a ficha QR
+      <section className="home-summary" aria-label="Resumen del inventario">
+        <div className="home-copy">
+          <span>
+            <Sparkles size={14} /> IA + QR
           </span>
-          <h1>Clasifica con una foto.</h1>
-          <p>IA para reconocer el objeto, completar la ficha y asociarla a un QR.</p>
+          <strong>Clasifica con una foto</strong>
+          <p>Reconoce el objeto, completa la ficha y genera una etiqueta QR.</p>
         </div>
-        <div className="hero-card">
-          <strong>{items.length}</strong>
-          <span>objetos</span>
+        <div className="summary-pills">
+          <article>
+            <strong>{items.length}</strong>
+            <span>objetos</span>
+          </article>
+          <article>
+            <strong>{pending}</strong>
+            <span>revisar</span>
+          </article>
+          <article>
+            <strong>{labeled.length}</strong>
+            <span>QR</span>
+          </article>
         </div>
       </section>
 
-      {cloudState !== "ready" ? (
+      {cloudState === "loading" || cloudState === "saving" ? (
         <section className={`cloud-banner ${cloudState}`}>
           <CloudIcon state={cloudState} />
           <span>{cloudMessage}</span>
@@ -643,21 +653,6 @@ function App() {
           <Tag size={17} /> Etiquetas
         </button>
       </nav>
-
-      <section className="metrics" aria-label="Resumen">
-        <article>
-          <strong>{pending}</strong>
-          <span>por revisar</span>
-        </article>
-        <article>
-          <strong>{labeled.length}</strong>
-          <span>con QR</span>
-        </article>
-        <article>
-          <strong>{items.filter((item) => item.photos.length).length}</strong>
-          <span>con fotos</span>
-        </article>
-      </section>
 
       {mode === "capture" ? (
         <section className="panel capture-panel">
