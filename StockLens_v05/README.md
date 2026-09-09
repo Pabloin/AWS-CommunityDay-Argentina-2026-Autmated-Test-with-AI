@@ -53,6 +53,10 @@ Abrir:
 http://127.0.0.1:5190
 ```
 
+Los QR generados localmente apuntan a la app publica en
+`https://mobile-v5.lens.glaciar.org`, para que puedan abrirse desde cualquier
+telefono. El pipeline define esa direccion mediante `VITE_PUBLIC_APP_URL`.
+
 ## Despliegue En AWS
 
 Dominio propuesto:
