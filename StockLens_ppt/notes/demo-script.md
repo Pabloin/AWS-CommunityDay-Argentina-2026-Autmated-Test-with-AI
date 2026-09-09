@@ -1,8 +1,8 @@
 # Demo Script
 
-## Demo v01
+## Demo base
 
-1. Abrir `StockLens_v01`.
+1. Abrir `StockLens_v02`.
 2. Mostrar inventario inicial.
 3. Crear un activo nuevo.
 4. Adjuntar fotos del producto y etiqueta.
@@ -11,7 +11,7 @@
 7. Registrar una salida y un ajuste.
 8. Mostrar historial.
 
-## Demo v02
+## Demo mobile
 
 1. Abrir `StockLens_v02` en vista mobile.
 2. Cargar un activo rapido.

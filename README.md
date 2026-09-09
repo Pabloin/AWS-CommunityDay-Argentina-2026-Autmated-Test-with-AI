@@ -5,12 +5,10 @@ hacia una arquitectura AWS.
 
 ## Apps
 
-- `StockLens_v01/`: app admin/local con inventario, QR, fotos y movimientos.
 - `StockLens_v02/`: version serverless con `front_web`, `front_mobile`, `backend`, `terraform` y CI/CD OIDC.
 - `StockLens_v04/`: demo tecnica con GitHub Actions, OIDC, Amazon Bedrock, Playwright y evidencia.
 - `StockLens_v05/`: demo de producto mobile-first para catalogar objetos de casa/galpon y prepararlos para vender.
 - `StockLens_ppt/`: material de presentacion.
-- `personal-wallet/`: idea separada de wallet personal consolidada.
 
 ## Aplicaciones Desplegadas
 
@@ -84,14 +82,6 @@ Estado verificado el 2026-09-07:
 - `README_MAIN.md`: guia principal de la charla.
 - `STRUCTURE_OVERVIEW.md`: mapa de carpetas y versiones.
 - `README_USE_CASES.md`: motivacion y casos de uso de edificio/casa.
-
-## Ejecutar StockLens v01
-
-```bash
-cd StockLens_v01
-npm install
-npm run dev
-```
 
 ## Ejecutar StockLens v02
 

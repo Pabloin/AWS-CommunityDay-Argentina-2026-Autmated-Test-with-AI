@@ -18,7 +18,7 @@ AWS preparada para operar.
 
 ## Acto 2: La magia del prototipo
 
-- Mostrar `StockLens_v01`.
+- Mostrar la evolucion inicial en `StockLens_v02`.
 - Crear un activo.
 - Agregar fotos y texto de etiqueta.
 - Generar QR.
@@ -37,6 +37,7 @@ AWS preparada para operar.
 - Proponer arquitectura serverless AWS.
 - S3 para fotos, DynamoDB para datos, Lambda para logica.
 - Textract y Bedrock para extraer y sugerir informacion.
+- GitHub Actions con OIDC para desplegar sin credenciales largas.
 
 ## Cierre
 

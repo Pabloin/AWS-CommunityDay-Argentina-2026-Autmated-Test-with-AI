@@ -8,21 +8,6 @@ fotos de activos, auditoria de campo y trazabilidad.
 
 ## Etapas
 
-### v01: StockLens Admin - Prototipo local
-
-Ubicacion: `StockLens_v01/`
-
-Primera version funcional en navegador:
-
-- Inventario de activos y lotes.
-- Generacion de codigos QR.
-- Fotos asociadas al activo.
-- Texto visible de etiquetas.
-- Movimientos de entrada, salida y ajuste.
-- Persistencia local en el navegador.
-
-Mensaje: la IA ayuda a convertir una idea en una app usable muy rapido.
-
 ### v02: StockLens Serverless - Web, mobile y backend AWS
 
 Ubicacion: `StockLens_v02/`
@@ -58,17 +43,11 @@ operacion, costos y automatizacion.
 ## Como navegar
 
 - `StockLens_ppt/`: material de presentacion.
-- `StockLens_v01/`: app web admin/local.
 - `StockLens_v02/`: version serverless integrada con `front_web`, `front_mobile`, `backend` y `terraform`.
-- `personal-wallet/`: idea separada, no relacionada con StockLens.
+- `StockLens_v04/`: demo tecnica del pipeline con IA, Playwright y evidencia.
+- `StockLens_v05/`: demo de producto mobile-first con catalogo cloud.
 
 ## Comandos
-
-```bash
-cd StockLens_v01
-npm install
-npm run dev
-```
 
 ```bash
 cd StockLens_v02/front_mobile
