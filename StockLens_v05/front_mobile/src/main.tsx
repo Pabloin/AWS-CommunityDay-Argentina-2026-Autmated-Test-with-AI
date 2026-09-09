@@ -10,7 +10,6 @@ import {
   ImagePlus,
   Loader2,
   PackageCheck,
-  Plus,
   QrCode,
   Search,
   Sparkles,
@@ -19,6 +18,7 @@ import {
 } from "lucide-react";
 import QRCode from "qrcode";
 import jsQR from "jsqr";
+import stockLensAppIcon from "./assets/stocklens-app-icon.png";
 import "./styles.css";
 
 type Status = "review" | "identified" | "labeled" | "stored" | "missing";
@@ -607,17 +607,14 @@ function App() {
     <main className="app-shell">
       <header className="app-header">
         <div className="brand-lockup">
-          <div className="brand-mark" aria-label="StockLens: QR y lente">
-            <QrCode className="brand-qr" size={27} strokeWidth={2.3} />
-            <Search className="brand-lens" size={15} strokeWidth={3} aria-hidden="true" />
-          </div>
+          <img className="brand-mark" src={stockLensAppIcon} alt="StockLens" />
           <div>
             <span>StockLens v05</span>
             <strong>Mis cosas</strong>
           </div>
         </div>
-        <button type="button" onClick={() => setMode("capture")} aria-label="Agregar objeto">
-          <Plus size={20} />
+        <button className="header-action" type="button" onClick={() => setMode("capture")}>
+          <Camera size={17} /> Clasificar
         </button>
       </header>
 
