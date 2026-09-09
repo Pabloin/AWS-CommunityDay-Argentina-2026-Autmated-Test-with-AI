@@ -2,7 +2,7 @@
 
 ## Demo base
 
-1. Abrir `StockLens_v02`.
+1. Abrir `StockLens_v04`.
 2. Mostrar inventario inicial.
 3. Crear un activo nuevo.
 4. Adjuntar fotos del producto y etiqueta.
@@ -13,7 +13,7 @@
 
 ## Demo mobile
 
-1. Abrir `StockLens_v02` en vista mobile.
+1. Abrir `StockLens_v05` en vista mobile.
 2. Cargar un activo rapido.
 3. Adjuntar una foto.
 4. Marcar estado `Revisar`.

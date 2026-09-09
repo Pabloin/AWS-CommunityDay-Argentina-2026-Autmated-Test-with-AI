@@ -8,21 +8,6 @@ fotos de activos, auditoria de campo y trazabilidad.
 
 ## Etapas
 
-### v02: StockLens Serverless - Web, mobile y backend AWS
-
-Ubicacion: `StockLens_v02/`
-
-Version integrada para evolucionar el prototipo a AWS:
-
-- `front_web/`: administracion desktop/web.
-- `front_mobile/`: experiencia mobile-first para operadores.
-- `backend/`: API serverless con Lambda.
-- `terraform/`: DynamoDB, S3, CloudFront, ACM, Route53, API Gateway, Lambda y rol OIDC.
-- `.github/workflows/`: CI/CD con GitHub Actions.
-
-Mensaje: el valor real aparece cuando el prototipo gana backend, persistencia,
-seguridad y despliegue reproducible.
-
 ### v03: StockLens Cloud - Arquitectura AWS propuesta
 
 Ubicacion futura: `StockLens_v03/`
@@ -43,14 +28,7 @@ operacion, costos y automatizacion.
 ## Como navegar
 
 - `StockLens_ppt/`: material de presentacion.
-- `StockLens_v02/`: version serverless integrada con `front_web`, `front_mobile`, `backend` y `terraform`.
 - `StockLens_v04/`: demo tecnica del pipeline con IA, Playwright y evidencia.
 - `StockLens_v05/`: demo de producto mobile-first con catalogo cloud.
 
 ## Comandos
-
-```bash
-cd StockLens_v02/front_mobile
-npm install
-npm run dev
-```

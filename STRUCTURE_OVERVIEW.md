@@ -22,26 +22,15 @@ AWS-CommunityDay-Argentina-2026-Autmated-Test-with-AI/
 │   └── diagrams/
 │       └── architecture.md
 |
-├── StockLens_v02/
-│   ├── ARQUITECTURA_REQ_v02.md
-│   ├── README.md
-│   ├── front_web/
-│   │   ├── package.json
-│   │   └── src/
-│   ├── front_mobile/
-│   │   ├── package.json
-│   │   └── src/
-│   ├── backend/
-│   │   └── functions/
-│   ├── terraform/
-│   └── scripts/
+├── StockLens_v03/
+├── StockLens_v04/
+└── StockLens_v05/
 ```
 
 ## Versiones StockLens
 
 | Version | Objetivo | Estado |
 | --- | --- | --- |
-| `StockLens_v02` | Web + mobile + backend serverless + DynamoDB + CI/CD OIDC | En progreso |
 | `StockLens_v03` | Produccion hardening, observabilidad y dominio | Pendiente |
 | `StockLens_v04` | Pipeline con IA, Playwright, evidencia y GitHub Actions OIDC | Desplegada |
 | `StockLens_v05` | Producto mobile-first con catalogo cloud y Bedrock Vision | Desplegada |
@@ -49,7 +38,6 @@ AWS-CommunityDay-Argentina-2026-Autmated-Test-with-AI/
 ## Flujo de charla
 
 1. Mostrar el problema: inventario fisico sin trazabilidad visual.
-2. Demo v02: experiencia mobile en campo.
-3. Demo v04: pipeline con IA, tests Playwright y evidencia.
-4. Demo v05: producto mobile-first con catalogo cloud.
-5. Cierre: IA acelera, pero cloud engineering lo vuelve operable.
+2. Demo v04: pipeline con IA, tests Playwright y evidencia.
+3. Demo v05: producto mobile-first con catalogo cloud.
+4. Cierre: IA acelera, pero cloud engineering lo vuelve operable.

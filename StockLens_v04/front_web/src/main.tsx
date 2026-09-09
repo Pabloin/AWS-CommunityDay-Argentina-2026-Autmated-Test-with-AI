@@ -74,7 +74,7 @@ type FormState = {
 };
 
 type QRPayload = {
-  app: "QR-Stock-v04" | "QR-Stock-v02" | "QR-Stock-v01";
+  app: "QR-Stock-v04";
   id: string;
 };
 
@@ -90,7 +90,6 @@ declare global {
 }
 
 const STORAGE_KEY = "stocklens-v04-state";
-const LEGACY_STORAGE_KEY = "qr-stock-v01-state";
 const MAX_PHOTOS = 4;
 
 const starterItems: StockItem[] = [
@@ -175,8 +174,7 @@ function parseQrValue(value: string): string | null {
   try {
     const parsed = JSON.parse(trimmed) as Partial<QRPayload>;
     if (
-      (parsed.app === "QR-Stock-v04" || parsed.app === "QR-Stock-v02" || parsed.app === "QR-Stock-v01") &&
-      typeof parsed.id === "string"
+      parsed.app === "QR-Stock-v04" && typeof parsed.id === "string"
     ) {
       return parsed.id;
     }
@@ -219,7 +217,7 @@ function imageFileToDataUrl(file: File) {
 }
 
 function loadState() {
-  const raw = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem(LEGACY_STORAGE_KEY);
+  const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) {
     return { items: starterItems, movements: [] as Movement[] };
   }

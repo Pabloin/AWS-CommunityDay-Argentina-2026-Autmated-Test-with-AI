@@ -18,7 +18,7 @@ AWS preparada para operar.
 
 ## Acto 2: La magia del prototipo
 
-- Mostrar la evolucion inicial en `StockLens_v02`.
+- Mostrar la evolucion inicial en `StockLens_v04`.
 - Crear un activo.
 - Agregar fotos y texto de etiqueta.
 - Generar QR.
@@ -26,7 +26,7 @@ AWS preparada para operar.
 
 ## Acto 3: La experiencia real
 
-- Mostrar `StockLens_v02`.
+- Mostrar `StockLens_v05`.
 - Explicar mobile-first.
 - Alta desde celular.
 - Acciones rapidas en campo.

@@ -23,8 +23,6 @@ Architecture progression:
 
 | Version | Scope | Message |
 | --- | --- | --- |
-| v01 | Local StockLens admin app | AI can quickly create a usable prototype. |
-| v02 | Web + mobile + backend + DynamoDB + public domains + CI/CD OIDC | The prototype becomes a cloud application. |
 | v03 | AWS pipeline with AI-generated tests | Confidence gate before production deploys. |
 
 ## v03 Architecture Decision
@@ -48,7 +46,7 @@ Key decisions:
 - Use CodeStar Connections for GitHub source integration.
 - Use DynamoDB on-demand with a single-table design for core application data.
 - Use S3 for photo/evidence objects.
-- Keep GitHub Actions from v02 as context only; v03 demonstrates native AWS pipeline services.
+- Use AWS-native pipeline services for the v03 workshop path.
 - Keep frontend artifact upload in CodeBuild deploy, not inside Terraform.
 - Keep Terraform responsible for infrastructure, IAM and DNS records.
 - Store Terraform state in an S3 backend with native S3 lockfile support.
@@ -237,7 +235,7 @@ CodeBuild Deploy
 | CodeStar Connections | GitHub source integration for CodePipeline. |
 | Amazon Bedrock | Test generation assistant. |
 | Resource Groups | Tag-based discovery for the deployed stack. |
-| GitHub Actions | v02 comparison point, not the primary v03 pipeline. |
+| GitHub Actions | Not the primary v03 pipeline. |
 
 ## Tagging Requirements
 
