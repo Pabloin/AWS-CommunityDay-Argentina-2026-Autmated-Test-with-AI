@@ -616,8 +616,8 @@ function App() {
           <span className="hero-pill">
             <Sparkles size={15} /> Foto a ficha QR
           </span>
-          <h1>Una foto y ya existe.</h1>
-          <p>La IA interpreta el objeto, crea una ficha y lo deja listo para identificar con QR.</p>
+          <h1>Clasifica con una foto.</h1>
+          <p>IA para reconocer el objeto, completar la ficha y asociarla a un QR.</p>
         </div>
         <div className="hero-card">
           <strong>{items.length}</strong>
@@ -625,10 +625,12 @@ function App() {
         </div>
       </section>
 
-      <section className={`cloud-banner ${cloudState}`}>
-        <CloudIcon state={cloudState} />
-        <span>{cloudMessage}</span>
-      </section>
+      {cloudState !== "ready" ? (
+        <section className={`cloud-banner ${cloudState}`}>
+          <CloudIcon state={cloudState} />
+          <span>{cloudMessage}</span>
+        </section>
+      ) : null}
 
       <nav className="tabs" aria-label="Secciones">
         <button className={mode === "capture" ? "active" : ""} type="button" onClick={() => setMode("capture")}>
