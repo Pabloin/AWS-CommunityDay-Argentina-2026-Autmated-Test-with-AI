@@ -22,7 +22,6 @@ AWS-CommunityDay-Argentina-2026-Autmated-Test-with-AI/
 │   └── diagrams/
 │       └── architecture.md
 |
-├── StockLens_v03/
 ├── StockLens_v04/
 └── StockLens_v05/
 ```
@@ -31,7 +30,6 @@ AWS-CommunityDay-Argentina-2026-Autmated-Test-with-AI/
 
 | Version | Objetivo | Estado |
 | --- | --- | --- |
-| `StockLens_v03` | Produccion hardening, observabilidad y dominio | Pendiente |
 | `StockLens_v04` | Pipeline con IA, Playwright, evidencia y GitHub Actions OIDC | Desplegada |
 | `StockLens_v05` | Producto mobile-first con catalogo cloud y Bedrock Vision | Desplegada |
 

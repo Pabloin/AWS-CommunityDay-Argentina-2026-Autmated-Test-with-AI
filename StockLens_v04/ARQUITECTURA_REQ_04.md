@@ -27,7 +27,6 @@ pipelines de GitHub Actions con OIDC hacia AWS:
 
 | Version | Scope | Mensaje |
 | --- | --- | --- |
-| v03 | CodePipeline/CodeBuild | Variante AWS-native, mas compleja para la demo. |
 | v04 | GitHub Actions + OIDC + AI quality gate | Demo clara, auditable y ejecutable. |
 
 ## Recursos AWS
