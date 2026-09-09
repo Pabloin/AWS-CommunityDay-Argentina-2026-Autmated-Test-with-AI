@@ -31,7 +31,7 @@ button {
 .app-shell {
   width: min(520px, 100%);
   margin: 0 auto;
-  padding: 14px 14px 30px;
+  padding: 8px 14px 30px;
 }
 
 .app-header {
@@ -40,8 +40,9 @@ button {
   z-index: 4;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 12px 0;
+  justify-content: flex-start;
+  min-height: 54px;
+  padding: 6px 0;
   background: rgba(241, 244, 239, 0.94);
   backdrop-filter: blur(14px);
 }
@@ -49,70 +50,16 @@ button {
 .brand-lockup {
   display: flex;
   align-items: center;
-  gap: 10px;
+  min-width: 0;
 }
 
-.brand-mark {
+.brand-logo {
   display: block;
-  width: 48px;
-  height: 48px;
+  width: min(174px, 52vw);
+  height: auto;
   flex: 0 0 auto;
-  border-radius: 12px;
   object-fit: contain;
-  filter: drop-shadow(0 8px 12px rgba(18, 56, 47, 0.18));
-}
-
-.app-header span,
-.app-header strong {
-  display: block;
-}
-
-.app-header span {
-  color: #6d766f;
-  font-size: 12px;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.app-header strong {
-  font-size: 26px;
-  line-height: 1;
-}
-
-.app-header .header-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  min-height: 42px;
-  border: 1px solid rgba(23, 37, 31, 0.14);
-  border-radius: 8px;
-  padding: 0 12px;
-  background: #fff;
-  color: #17251f;
-  font-size: 13px;
-  font-weight: 950;
-  box-shadow: 0 10px 18px rgba(23, 37, 31, 0.1);
-}
-
-.app-header .header-action:active {
-  transform: translateY(1px);
-}
-
-.app-header .header-action svg {
-  color: #ff9700;
-}
-
-.app-header button:not(.header-action) {
-  display: grid;
-  place-items: center;
-  width: 46px;
-  height: 46px;
-  border: 0;
-  border-radius: 50%;
-  background: #17251f;
-  color: #fff;
-  box-shadow: 0 14px 24px rgba(23, 37, 31, 0.2);
+  filter: drop-shadow(0 8px 12px rgba(18, 56, 47, 0.14));
 }
 
 .hero {

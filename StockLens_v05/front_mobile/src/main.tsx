@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import QRCode from "qrcode";
 import jsQR from "jsqr";
-import stockLensAppIcon from "./assets/stocklens-app-icon.png";
+import stockLensLogo from "./assets/stocklens-logo.png";
 import "./styles.css";
 
 type Status = "review" | "identified" | "labeled" | "stored" | "missing";
@@ -607,15 +607,8 @@ function App() {
     <main className="app-shell">
       <header className="app-header">
         <div className="brand-lockup">
-          <img className="brand-mark" src={stockLensAppIcon} alt="StockLens" />
-          <div>
-            <span>StockLens v05</span>
-            <strong>Mis cosas</strong>
-          </div>
+          <img className="brand-logo" src={stockLensLogo} alt="StockLens" />
         </div>
-        <button className="header-action" type="button" onClick={() => setMode("capture")}>
-          <Camera size={17} /> Clasificar
-        </button>
       </header>
 
       <section className="hero">
