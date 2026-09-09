@@ -713,7 +713,7 @@ function App() {
                 required
                 value={draft.name}
                 onChange={(event) => setDraft({ ...draft, name: event.target.value })}
-                placeholder="Monopoly, Rayuela, patineta"
+                placeholder="Monopoly, taladro, patineta"
               />
             </label>
 
