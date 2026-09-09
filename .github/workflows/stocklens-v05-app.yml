@@ -65,7 +65,7 @@ jobs:
           fi
           npm ci --prefix front_mobile --include=optional
           npm rebuild --prefix front_mobile esbuild
-          VITE_API_BASE_URL="$api_endpoint" npm --prefix front_mobile run build
+          VITE_API_BASE_URL="$api_endpoint" VITE_PUBLIC_APP_URL="https://${MOBILE_DOMAIN_NAME}" npm --prefix front_mobile run build
           npm ci --prefix backend
           npm --prefix backend run package
 

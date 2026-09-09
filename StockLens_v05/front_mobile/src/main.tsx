@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   Archive,
+  ArrowLeft,
   Camera,
   Check,
   ChevronRight,
@@ -9,11 +10,11 @@ import {
   CloudOff,
   ImagePlus,
   Loader2,
+  MapPin,
   PackageCheck,
   QrCode,
   Search,
   Sparkles,
-  Tag,
   X
 } from "lucide-react";
 import QRCode from "qrcode";
@@ -22,7 +23,7 @@ import stockLensLogo from "./assets/stocklens-logo.png";
 import "./styles.css";
 
 type Status = "review" | "identified" | "labeled" | "stored" | "missing";
-type Mode = "capture" | "organize" | "labels";
+type Mode = "capture" | "scan" | "organize";
 
 type Item = {
   id: string;
@@ -103,19 +104,6 @@ const sampleItems: Item[] = [
     updatedAt: new Date().toISOString()
   },
   {
-    id: "SLV5-RAYU-002",
-    name: "Rayuela",
-    category: "Libro",
-    location: "Biblioteca del living",
-    status: "labeled",
-    price: 9500,
-    notes: "Buen estado general. Ficha lista para encontrarlo por QR.",
-    checklist: categoryChecklist.Libro,
-    checked: ["Tapa", "Lomo", "Autor", "Sin hojas sueltas"],
-    photos: [],
-    updatedAt: new Date().toISOString()
-  },
-  {
     id: "SLV5-PATI-003",
     name: "Patineta clasica",
     category: "Deporte",
@@ -143,13 +131,15 @@ const emptyDraft: Draft = {
 };
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "";
+const publicAppUrl = import.meta.env.VITE_PUBLIC_APP_URL ?? "https://mobile-v5.lens.glaciar.org";
 
 function loadItems() {
   const raw = localStorage.getItem(storageKey);
   if (!raw) return sampleItems;
   try {
     const parsed = JSON.parse(raw) as Item[];
-    return Array.isArray(parsed) && parsed.length ? parsed : sampleItems;
+    const currentItems = Array.isArray(parsed) ? parsed.filter((item) => item.id !== "SLV5-RAYU-002") : [];
+    return currentItems.length ? currentItems : sampleItems;
   } catch {
     return sampleItems;
   }
@@ -211,37 +201,34 @@ function toDataUrl(file: File) {
 
 function QrPanel({ item }: { item: Item }) {
   const [qr, setQr] = useState("");
+  const itemUrl = useMemo(() => {
+    const url = new URL(import.meta.env.BASE_URL, publicAppUrl);
+    url.searchParams.set("item", item.id);
+    return url.toString();
+  }, [item.id]);
 
   useEffect(() => {
-    QRCode.toDataURL(JSON.stringify({ app: "StockLens-v05", id: item.id }), {
+    QRCode.toDataURL(itemUrl, {
       margin: 1,
       width: 220,
       color: { dark: "#17251f", light: "#ffffff" }
     }).then(setQr);
-  }, [item.id]);
+  }, [itemUrl]);
 
   return (
-    <section className="organize-preview" aria-label={`Vista previa de ${item.name}`}>
-      <div className="preview-photo">
-        {item.photos[0] ? (
-          <img src={item.photos[0]} alt={`Foto de ${item.name}`} />
-        ) : (
-          <div className="preview-photo-empty">
-            <PackageCheck size={28} />
-            <span>Sin foto</span>
-          </div>
-        )}
-      </div>
-      <div className="qr-panel">
-        {qr ? <img src={qr} alt={`QR ${item.name}`} /> : <div className="qr-empty" />}
+    <section className="qr-card" aria-label={`Etiqueta QR de ${item.name}`}>
+      <div className="qr-card-heading">
+        <span><QrCode size={20} /></span>
         <div>
           <strong>Etiqueta QR</strong>
-          <span>{item.id}</span>
-          <small>Escanea para abrir esta ficha.</small>
+          <small>Usala para encontrar este objeto.</small>
         </div>
-        <a href={qr} download={`${item.id}.png`}>
-          Descargar
-        </a>
+      </div>
+      {qr ? <img src={qr} alt={`QR ${item.name}`} /> : <div className="qr-empty" />}
+      <span className="qr-code-id">{item.id}</span>
+      <div className="qr-card-actions">
+        <a href={itemUrl}>Abrir ficha</a>
+        <a href={qr} download={`${item.id}.png`}>Descargar</a>
       </div>
     </section>
   );
@@ -249,9 +236,11 @@ function QrPanel({ item }: { item: Item }) {
 
 function App() {
   const initialItems = useMemo(loadItems, []);
+  const linkedItemId = useMemo(() => new URLSearchParams(window.location.search).get("item")?.trim() ?? "", []);
+  const localLinkedItem = initialItems.find((item) => item.id === linkedItemId);
   const [items, setItems] = useState<Item[]>(initialItems);
-  const [selectedId, setSelectedId] = useState(initialItems[0]?.id ?? "");
-  const [mode, setMode] = useState<Mode>("capture");
+  const [selectedId, setSelectedId] = useState(localLinkedItem?.id ?? initialItems[0]?.id ?? "");
+  const [mode, setMode] = useState<Mode>(linkedItemId ? "organize" : "capture");
   const [query, setQuery] = useState("");
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [analysisState, setAnalysisState] = useState<"idle" | "loading" | "ready" | "error">("idle");
@@ -261,13 +250,13 @@ function App() {
   const [scanState, setScanState] = useState<"idle" | "loading" | "error">("idle");
   const [scanMessage, setScanMessage] = useState("");
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(Boolean(localLinkedItem));
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const frameRef = useRef<number | null>(null);
   const scanBusyRef = useRef(false);
   const selected = items.find((item) => item.id === selectedId) ?? items[0];
-  const labeled = items.filter((item) => item.status === "labeled" || item.status === "stored");
   const pending = items.filter((item) => item.status === "review").length;
   const filtered = items.filter((item) =>
     `${item.name} ${item.category} ${item.location} ${item.id}`.toLowerCase().includes(query.toLowerCase())
@@ -291,7 +280,12 @@ function App() {
         const cloudItems = (payload.items ?? []).map(fromApiItem);
         if (cloudItems.length) {
           setItems(cloudItems);
-          setSelectedId(cloudItems[0].id);
+          const linkedItem = cloudItems.find((item) => item.id === linkedItemId);
+          setSelectedId(linkedItem?.id ?? cloudItems[0].id);
+          if (linkedItem) {
+            setMode("organize");
+            setDetailOpen(true);
+          }
         }
         setCloudState("ready");
         setCloudMessage(cloudItems.length ? "Catalogo cloud sincronizado." : "Catalogo cloud listo para cargar objetos.");
@@ -300,7 +294,7 @@ function App() {
         setCloudState("local");
         setCloudMessage(error instanceof Error ? error.message : "Usando catalogo local.");
       });
-  }, []);
+  }, [linkedItemId]);
 
   const addDraftPhotos = async (files: FileList | null) => {
     if (!files?.length) return;
@@ -372,15 +366,27 @@ function App() {
   };
 
   const openItemFromQrPayload = async (qrPayload: string) => {
-    if (!apiBaseUrl) throw new Error("API no configurada.");
     const itemId = itemIdFromQr(qrPayload);
     if (!itemId) throw new Error("El QR no contiene un ID de StockLens v05.");
+
+    if (!apiBaseUrl) {
+      const localItem = items.find((item) => item.id === itemId);
+      if (!localItem) throw new Error("Ese QR no existe en el inventario local.");
+      setSelectedId(localItem.id);
+      setDetailOpen(true);
+      setScanState("idle");
+      setScanMessage(`Ficha abierta: ${localItem.name}.`);
+      setMode("organize");
+      return;
+    }
+
     const result = await fetch(`${apiBaseUrl}/items/${encodeURIComponent(itemId)}`);
     const payload = await result.json();
     if (!result.ok) throw new Error("Ese QR no existe en el catalogo cloud.");
     const found = fromApiItem(payload as ApiItem);
     setItems((current) => [found, ...current.filter((item) => item.id !== found.id)]);
     setSelectedId(found.id);
+    setDetailOpen(true);
     setScanState("idle");
     setScanMessage(`Ficha abierta: ${found.name}.`);
     setMode("organize");
@@ -573,11 +579,13 @@ function App() {
       const savedItem = fromApiItem(payload as ApiItem);
       setItems((current) => [savedItem, ...current.filter((currentItem) => currentItem.id !== savedItem.id)]);
       setSelectedId(savedItem.id);
+      setDetailOpen(true);
       setCloudState("ready");
       setCloudMessage("Objeto guardado en DynamoDB y fotos en S3.");
     } catch (error) {
       setItems((current) => [item, ...current]);
       setSelectedId(item.id);
+      setDetailOpen(true);
       setCloudState("local");
       setCloudMessage(error instanceof Error ? `${error.message} Quedo guardado localmente.` : "Quedo guardado localmente.");
     } finally {
@@ -603,36 +611,51 @@ function App() {
     updateItem({ checked });
   };
 
+  const changeMode = (nextMode: Mode) => {
+    if (nextMode !== "scan" && scannerOpen) stopScanner();
+    if (nextMode === "organize") setDetailOpen(false);
+    setMode(nextMode);
+  };
+
   return (
     <main className="app-shell">
       <header className="app-header">
         <div className="brand-lockup">
           <img className="brand-logo" src={stockLensLogo} alt="StockLens" />
         </div>
+        <div className="inventory-status" aria-label={cloudMessage}>
+          <span className={`status-light ${cloudState}`} />
+          <div>
+            <strong>Mi inventario</strong>
+            <small>{cloudState === "ready" ? "Sincronizado" : cloudState === "local" ? "En este dispositivo" : "Actualizando"}</small>
+          </div>
+        </div>
       </header>
 
-      <section className="home-summary" aria-label="Resumen del inventario">
-        <div className="home-copy">
-          <span>
-            <Sparkles size={14} /> IA + QR
-          </span>
-          <strong>Clasifica con una foto</strong>
-          <p>Reconoce el objeto, completa la ficha y genera una etiqueta QR.</p>
+      <section className="mobile-hero" aria-label="Acciones principales">
+        <div className="hero-copy">
+          <span><Sparkles size={14} /> Inventario inteligente</span>
+          <h1>¿Qué querés hacer?</h1>
+          <p>Clasificá, encontrá y organizá tus cosas desde el celular.</p>
         </div>
-        <div className="summary-pills">
-          <article>
-            <strong>{items.length}</strong>
-            <span>objetos</span>
-          </article>
-          <article>
-            <strong>{pending}</strong>
-            <span>revisar</span>
-          </article>
-          <article>
-            <strong>{labeled.length}</strong>
-            <span>QR</span>
-          </article>
-        </div>
+
+        <nav className="task-nav" aria-label="Secciones">
+          <button className={mode === "capture" ? "active capture" : "capture"} type="button" onClick={() => changeMode("capture")}>
+            <span className="task-icon"><Camera size={22} /></span>
+            <strong>Clasificar</strong>
+            <small>Con foto + IA</small>
+          </button>
+          <button className={mode === "scan" ? "active scan" : "scan"} type="button" onClick={() => changeMode("scan")}>
+            <span className="task-icon"><QrCode size={22} /></span>
+            <strong>Leer QR</strong>
+            <small>Abrir una ficha</small>
+          </button>
+          <button className={mode === "organize" ? "active organize" : "organize"} type="button" onClick={() => changeMode("organize")}>
+            <span className="task-icon"><Archive size={22} /></span>
+            <strong>Organizar</strong>
+            <small>{items.length} objetos</small>
+          </button>
+        </nav>
       </section>
 
       {cloudState === "loading" || cloudState === "saving" ? (
@@ -642,43 +665,16 @@ function App() {
         </section>
       ) : null}
 
-      <nav className="tabs" aria-label="Secciones">
-        <button className={mode === "capture" ? "active" : ""} type="button" onClick={() => setMode("capture")}>
-          <Camera size={17} /> Clasificar
-        </button>
-        <button className={mode === "organize" ? "active" : ""} type="button" onClick={() => setMode("organize")}>
-          <Archive size={17} /> Organizar
-        </button>
-        <button className={mode === "labels" ? "active" : ""} type="button" onClick={() => setMode("labels")}>
-          <Tag size={17} /> Etiquetas
-        </button>
-      </nav>
-
       {mode === "capture" ? (
         <section className="panel capture-panel">
           <form onSubmit={createItem}>
-            <div className={`qr-scan ${scanState}`}>
-              <QrCode size={24} />
-              <strong>{scanState === "loading" ? "Leyendo..." : "Leer QR existente"}</strong>
-              <span>{scanMessage || "Escanea una etiqueta para traer toda la ficha."}</span>
-              <div className="qr-scan-actions">
-                <button type="button" onClick={scannerOpen ? stopScanner : startScanner}>
-                  {scannerOpen ? "Cerrar camara" : "Apuntar camara"}
-                </button>
-                <label>
-                  Desde foto
-                  <input type="file" accept="image/*" capture="environment" onChange={(event) => scanQr(event.target.files)} />
-                </label>
+            <div className="mode-heading">
+              <span className="mode-icon capture"><Camera size={22} /></span>
+              <div>
+                <strong>Nuevo objeto</strong>
+                <p>Sacá una foto y dejá que la IA complete la ficha.</p>
               </div>
             </div>
-
-            {scannerOpen ? (
-              <div className="scanner-panel">
-                <video ref={videoRef} playsInline muted autoPlay />
-                <canvas ref={canvasRef} aria-hidden="true" />
-                <span>Centra el QR dentro del recuadro.</span>
-              </div>
-            ) : null}
 
             <label className="photo-drop">
               <input type="file" accept="image/*" capture="environment" multiple onChange={(event) => addDraftPhotos(event.target.files)} />
@@ -768,41 +764,134 @@ function App() {
         </section>
       ) : null}
 
+      {mode === "scan" ? (
+        <section className="panel scan-view">
+          <div className="scan-intro">
+            <span className="scan-orb"><QrCode size={30} /></span>
+            <div>
+              <span className="section-kicker">Encontrar</span>
+              <h2>Leé una etiqueta QR</h2>
+              <p>Apuntá la cámara al código para abrir la ficha y ver dónde está guardado.</p>
+            </div>
+          </div>
+
+          {scannerOpen ? (
+            <div className="scanner-panel">
+              <video ref={videoRef} playsInline muted autoPlay />
+              <canvas ref={canvasRef} aria-hidden="true" />
+              <span>Centrá el QR dentro del recuadro.</span>
+            </div>
+          ) : (
+            <div className="scan-placeholder" aria-hidden="true">
+              <span className="scan-corner top-left" />
+              <span className="scan-corner top-right" />
+              <QrCode size={54} />
+              <strong>Listo para escanear</strong>
+              <small>La cámara se abrirá cuando toques el botón.</small>
+              <span className="scan-corner bottom-left" />
+              <span className="scan-corner bottom-right" />
+            </div>
+          )}
+
+          {scanMessage ? <p className={`scan-message ${scanState}`}>{scanMessage}</p> : null}
+
+          <div className="scan-primary-actions">
+            <button type="button" className="primary-action" onClick={scannerOpen ? stopScanner : startScanner}>
+              {scannerOpen ? <X size={19} /> : <Camera size={19} />}
+              {scannerOpen ? "Cerrar cámara" : "Abrir cámara"}
+            </button>
+            <label className="secondary-action">
+              <ImagePlus size={19} /> Leer desde foto
+              <input type="file" accept="image/*" capture="environment" onChange={(event) => scanQr(event.target.files)} />
+            </label>
+          </div>
+
+          <div className="scan-tip">
+            <Sparkles size={17} />
+            <span>Acercá el código y buscá buena luz para leerlo más rápido.</span>
+          </div>
+        </section>
+      ) : null}
+
       {mode === "organize" ? (
-        <>
-          <section className="search-panel">
-            <Search size={18} />
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar objeto, caja o categoria" />
-          </section>
+        !detailOpen ? (
+          <>
+            <section className="inventory-heading">
+              <div>
+                <span className="section-kicker">Inventario</span>
+                <h2>Todo en su lugar</h2>
+                <p>{pending ? `${pending} ${pending === 1 ? "objeto pendiente" : "objetos pendientes"} de revisión` : "Todo está al día"}</p>
+              </div>
+              <strong>{items.length}</strong>
+            </section>
 
-          <section className="item-list">
-            {filtered.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                className={item.id === selected.id ? "active" : ""}
-                onClick={() => setSelectedId(item.id)}
-              >
-                <span>
-                  <strong>{item.name}</strong>
-                  <small>{item.category} - {item.location}</small>
-                </span>
-                <em className={`status-dot ${item.status}`}>{statusLabels[item.status]}</em>
-              </button>
-            ))}
-          </section>
+            <section className="search-panel">
+              <Search size={18} />
+              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar objeto o ubicación" />
+            </section>
 
-          {selected ? (
-            <section className="panel detail-panel">
-              <div className="detail-head">
-                <div>
-                  <small>{selected.id}</small>
-                  <h2>{selected.name}</h2>
-                  <p>{selected.location}</p>
+            <section className="item-list" aria-label="Objetos del inventario">
+              {filtered.map((item) => {
+                const progress = item.checklist.length ? Math.round((item.checked.length / item.checklist.length) * 100) : 0;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedId(item.id);
+                      setDetailOpen(true);
+                    }}
+                  >
+                    <span className="item-thumb">
+                      {item.photos[0] ? <img src={item.photos[0]} alt="" /> : <PackageCheck size={23} />}
+                    </span>
+                    <span className="item-card-copy">
+                      <span className="item-card-meta">
+                        <span>{item.category}</span>
+                        <em className={`status-dot ${item.status}`}>{statusLabels[item.status]}</em>
+                      </span>
+                      <strong>{item.name}</strong>
+                      <span className="item-location"><MapPin size={13} /> {item.location}</span>
+                      <span className="item-progress"><i style={{ width: `${progress}%` }} /></span>
+                      <small>{item.checked.length} de {item.checklist.length} datos revisados</small>
+                    </span>
+                    <ChevronRight className="item-chevron" size={19} />
+                  </button>
+                );
+              })}
+
+              {!filtered.length ? (
+                <div className="empty-state compact">
+                  <Search size={24} />
+                  <strong>No encontramos objetos</strong>
+                  <span>Probá con otro nombre o ubicación.</span>
                 </div>
-                <strong>{selected.photos.length ? `${selected.photos.length} foto${selected.photos.length === 1 ? "" : "s"}` : "Sin foto"}</strong>
+              ) : null}
+            </section>
+          </>
+        ) : selected ? (
+          <section className="item-detail-view">
+            <button className="detail-back" type="button" onClick={() => setDetailOpen(false)}>
+              <ArrowLeft size={18} /> Volver al inventario
+            </button>
+
+            <section className="panel detail-panel">
+              <div className="detail-hero">
+                <div className="detail-photo">
+                  {selected.photos[0] ? <img src={selected.photos[0]} alt={selected.name} /> : <PackageCheck size={34} />}
+                </div>
+                <div className="detail-head">
+                  <span className="detail-category">{selected.category}</span>
+                  <h2>{selected.name}</h2>
+                  <p><MapPin size={14} /> {selected.location}</p>
+                  <small>{selected.id}</small>
+                </div>
               </div>
 
+              <div className="detail-section-title">
+                <strong>Estado del objeto</strong>
+                <span className={`status-dot ${selected.status}`}>{statusLabels[selected.status]}</span>
+              </div>
               <div className="status-actions">
                 {(["review", "identified", "labeled", "stored", "missing"] as Status[]).map((status) => (
                   <button
@@ -816,12 +905,17 @@ function App() {
                 ))}
               </div>
 
+              {selected.notes ? (
+                <div className="detail-notes">
+                  <strong>Notas</strong>
+                  <p>{selected.notes}</p>
+                </div>
+              ) : null}
+
               <div className="checklist">
                 <div className="section-title">
-                  <strong>Antes de etiquetar</strong>
-                  <span>
-                    {selected.checked.length}/{selected.checklist.length}
-                  </span>
+                  <strong>Datos revisados</strong>
+                  <span>{selected.checked.length}/{selected.checklist.length}</span>
                 </div>
                 {selected.checklist.map((label) => (
                   <button key={label} type="button" onClick={() => toggleCheck(label)}>
@@ -833,45 +927,10 @@ function App() {
 
               <QrPanel item={selected} />
             </section>
-          ) : null}
-        </>
+          </section>
+        ) : null
       ) : null}
 
-      {mode === "labels" ? (
-        <section className="sell-stack">
-          {labeled.length ? (
-            labeled.map((item) => (
-              <article key={item.id} className="sell-card" onClick={() => setSelectedId(item.id)}>
-                <div className="sell-thumb">{item.photos[0] ? <img src={item.photos[0]} alt={item.name} /> : <PackageCheck size={30} />}</div>
-                <div>
-                  <strong>{item.name}</strong>
-                  <span>{item.id}</span>
-                  <small>{item.location}</small>
-                </div>
-              </article>
-            ))
-          ) : (
-            <div className="empty-state">
-              <PackageCheck size={28} />
-              <strong>Todavia no hay objetos con QR</strong>
-              <span>Marca alguno como identificado o con QR.</span>
-            </div>
-          )}
-
-          {selected ? (
-            <section className="panel listing-panel">
-              <div className="section-title">
-                <strong>Ficha para QR</strong>
-              </div>
-              <pre>{`${selected.name}\n${selected.category} en ${selected.location}\nEstado: ${statusLabels[selected.status]}\n${selected.notes}`}</pre>
-              <QrPanel item={selected} />
-              <button className="primary-action" type="button" onClick={() => updateItem({ status: "labeled" })}>
-                <QrCode size={18} /> Marcar con QR
-              </button>
-            </section>
-          ) : null}
-        </section>
-      ) : null}
     </main>
   );
 }
