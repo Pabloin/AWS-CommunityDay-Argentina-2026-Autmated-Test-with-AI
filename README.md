@@ -81,3 +81,4 @@ Estado verificado el 2026-09-07:
 - `README_MAIN.md`: guia principal de la charla.
 - `STRUCTURE_OVERVIEW.md`: mapa de carpetas y versiones.
 - `README_USE_CASES.md`: motivacion y casos de uso de edificio/casa.
+- `README_TESTING_WITH_IA.md`: estrategia de testing con IA, capas estaticas/dinamicas y pipeline recomendado.
