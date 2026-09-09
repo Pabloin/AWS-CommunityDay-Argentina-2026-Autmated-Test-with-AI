@@ -3,13 +3,13 @@
 Version de producto mobile-first para la historia:
 
 ```text
-Convertir una caja olvidada en un catalogo vendible.
+Convertir una caja olvidada en un inventario visual con QR.
 ```
 
 v04 queda como demo tecnica de pipeline, OIDC, Bedrock, Playwright y evidencia.
 v05 explora como se sentiria la aplicacion si una persona del publico se la
-llevara a su casa para catalogar libros, juegos, juguetes, herramientas u
-objetos guardados.
+llevara a su casa para identificar libros, juegos, juguetes, herramientas u
+objetos guardados con IA y QR.
 
 ## Concepto
 
@@ -21,24 +21,24 @@ Sacar foto
   -> nombrar objeto
   -> marcar estado
   -> ubicarlo
-  -> decidir si esta listo para vender
+  -> generar QR para encontrarlo despues
 ```
 
 ## Experiencia
 
 Tres modos:
 
-- `Capturar`: alta rapida desde foto.
+- `Clasificar`: alta rapida desde foto con sugerencias de IA.
 - `Organizar`: lista de objetos, pendientes y detalle.
-- `Vender`: objetos listos para publicar.
+- `Etiquetas`: objetos identificados con ficha QR.
 
 Estados humanos:
 
 - `Para revisar`
-- `Listo para vender`
-- `Publicado`
-- `Vendido`
-- `No vender`
+- `Identificado`
+- `Con QR`
+- `Guardado`
+- `No ubicado`
 
 ## Probar local
 
@@ -87,7 +87,7 @@ El backend expone una API serverless:
 La vista mobile consume esa API para crear objetos desde el celular. La vista
 mobile tambien puede leer un QR existente para traer la ficha completa desde la
 nube. La vista admin muestra desde una notebook el catalogo compartido,
-incluyendo fotos, QR, tags, checklist y estado de venta.
+incluyendo fotos, QR, tags, checklist y estado de organizacion.
 
 Recursos principales:
 

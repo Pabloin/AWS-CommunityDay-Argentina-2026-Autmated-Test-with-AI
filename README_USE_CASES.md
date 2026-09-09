@@ -84,7 +84,7 @@ Mas confianza para operar espacios comunes.
 
 ---
 
-## Historia 2: La Casa, El Galpon Y Las Cosas Para Vender
+## Historia 2: La Casa, El Galpon Y Las Cosas Guardadas
 
 Esta historia hace que el caso sea mas universal.
 
@@ -98,15 +98,15 @@ inventario invisible en algun lugar:
 - Una patineta.
 - Herramientas.
 - Objetos de coleccion.
-- Cosas que se quieren vender por Mercado Libre u otro canal.
+- Cosas que algun dia se podrian mover, prestar, reparar o publicar en otra app.
 
-Antes de vender online, hay una tarea previa:
+Antes de cualquier decision, hay una tarea previa:
 
 ```text
 Ordenar lo que tengo.
 Saber en que estado esta.
 Sacar fotos.
-Decidir si esta listo para publicar.
+Poder encontrarlo despues.
 ```
 
 En esta historia, StockLens no es solamente una app de stock. Es una herramienta
@@ -120,7 +120,7 @@ Sacar foto del objeto
   -> registrar ubicacion
   -> agregar observaciones
   -> generar QR
-  -> marcar como listo para publicar
+  -> escanear el QR para recuperar la ficha
 ```
 
 Ejemplo:
@@ -146,8 +146,8 @@ Evidencia: foto de tapa y lomo
 Valor:
 
 ```text
-Antes de vender, se gana confianza sobre el inventario.
-Antes de publicar, se sabe que falta revisar.
+Antes de mover algo, se gana confianza sobre el inventario.
+Antes de prestar, reparar o publicar en otra app, se sabe que falta revisar.
 Antes de mover objetos, se sabe donde estan.
 ```
 
@@ -178,10 +178,10 @@ Alguien lo movio?
 En una casa, la decision puede ser:
 
 ```text
-Lo vendo?
 Esta completo?
 Necesita fotos?
 Donde lo guarde?
+Ya tiene QR?
 ```
 
 StockLens sirve porque reduce incertidumbre sobre cosas fisicas.
@@ -192,7 +192,7 @@ StockLens sirve porque reduce incertidumbre sobre cosas fisicas.
 
 El ecommerce no empieza en el checkout.
 
-Antes de vender hay que tener:
+Antes de publicar algo en cualquier canal externo hay que tener:
 
 - Catalogo.
 - Fotos.
@@ -205,8 +205,8 @@ StockLens permite contar esa etapa previa:
 
 ```text
 Primero ordeno mi inventario.
-Despues publico.
-Despues vendo.
+Despues genero confianza sobre los datos.
+Despues, si corresponde, otra app resuelve la venta.
 ```
 
 Por eso la aplicacion encaja con una charla sobre pipelines, tests e IA:
@@ -240,4 +240,3 @@ operable.
 Y el pipeline de la demo muestra como podemos desplegar esa aplicacion con mas
 confianza, usando IA para proponer tests y automatizacion para validar antes de
 llegar a produccion.
-

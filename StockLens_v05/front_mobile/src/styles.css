@@ -626,17 +626,21 @@ textarea:focus {
   color: #8f5100;
 }
 
+.status-dot.identified,
+.status-dot.labeled,
 .status-dot.ready,
 .status-dot.published {
   background: #e7f5ec;
   color: #126142;
 }
 
+.status-dot.stored,
 .status-dot.sold {
   background: #e8eefb;
   color: #284a84;
 }
 
+.status-dot.missing,
 .status-dot.keep {
   background: #ece8df;
   color: #5f5140;

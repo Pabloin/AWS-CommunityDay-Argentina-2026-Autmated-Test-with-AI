@@ -6,7 +6,7 @@ hacia una arquitectura AWS.
 ## Apps
 
 - `StockLens_v04/`: demo tecnica con GitHub Actions, OIDC, Amazon Bedrock, Playwright y evidencia.
-- `StockLens_v05/`: demo de producto mobile-first para catalogar objetos de casa/galpon y prepararlos para vender.
+- `StockLens_v05/`: demo de producto mobile-first para identificar objetos con IA, generar QR y organizar inventario.
 - `StockLens_ppt/`: material de presentacion.
 
 ## Aplicaciones Desplegadas
@@ -46,9 +46,9 @@ videos de Playwright y resultados del pipeline con IA.
 ### StockLens v05 - Demo de producto mobile-first
 
 Version pensada para que alguien del publico se lleve la idea a su casa:
-catalogar objetos con fotos, analizarlos con IA y prepararlos para vender o
-administrar un inventario personal. La app mobile carga objetos y fotos; la
-vista admin permite ver el catalogo compartido desde una notebook.
+catalogar objetos con fotos, analizarlos con IA, generar etiquetas QR y
+administrar un inventario personal. La app mobile carga objetos, fotos y lee
+QR; la vista admin permite ver el catalogo compartido desde una notebook.
 
 <table>
   <tr>

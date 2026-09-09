@@ -215,17 +215,21 @@ select {
   font-weight: 900;
 }
 
+.status.identified,
+.status.labeled,
 .status.ready,
 .status.published {
   background: #e7f5ec;
   color: #126142;
 }
 
+.status.stored,
 .status.sold {
   background: #e8eefb;
   color: #284a84;
 }
 
+.status.missing,
 .status.keep {
   background: #ece8df;
   color: #5f5140;

@@ -92,30 +92,28 @@ function normalizeSuggestion(parsed) {
     category: String(parsed.category ?? "Objeto").slice(0, 40),
     description: String(parsed.description ?? "").slice(0, 400),
     condition: String(parsed.condition ?? "Para revisar").slice(0, 80),
-    suggestedPriceLabel: String(parsed.suggestedPriceLabel ?? "Precio a definir").slice(0, 80),
+    qrLabel: String(parsed.qrLabel ?? "Etiqueta QR pendiente").slice(0, 80),
     locationHint: String(parsed.locationHint ?? "Galpon / caja").slice(0, 80),
     tags,
-    checklist: checklist.length ? checklist : ["Foto principal", "Estado visible", "Descripcion revisada"],
-    listingText: String(parsed.listingText ?? "").slice(0, 900)
+    checklist: checklist.length ? checklist : ["Foto principal", "Estado visible", "Descripcion revisada"]
   };
 }
 
 async function analyzeImage(dataUrl) {
   const image = parseDataUrl(dataUrl);
-  const prompt = `Analiza esta foto para una app de catalogo hogareno llamada StockLens.
+  const prompt = `Analiza esta foto para una app de inventario visual llamada StockLens.
 
-La persona quiere ordenar objetos de una casa, galpon o baulera para decidir si venderlos online.
+La persona quiere ordenar objetos de una casa, edificio, galpon o baulera. El objetivo es identificar el objeto, generar una ficha confiable y asociarla a un QR fisico.
 Detecta el objeto principal y devolve SOLO JSON valido con esta forma:
 {
   "name": "nombre corto del objeto",
   "category": "Juego de mesa | Libro | Juguete | Herramienta | Deporte | Objeto",
   "description": "descripcion util y concreta",
   "condition": "estado visible o recomendacion de revision",
-  "suggestedPriceLabel": "rango o criterio de precio, sin inventar certeza",
+  "qrLabel": "texto corto para imprimir junto al QR",
   "locationHint": "ubicacion sugerida tipo Galpon / caja azul",
   "tags": ["etiquetas significativas"],
-  "checklist": ["pasos para dejarlo listo para vender"],
-  "listingText": "texto breve para publicacion online"
+  "checklist": ["pasos para que la ficha quede identificable y verificable"]
 }
 
 No inventes marca, edicion ni estado si no se ve. Si tenes duda, marcala como revision pendiente.`;
@@ -158,8 +156,7 @@ function normalizeItem(input) {
     notes: String(input.notes ?? "").slice(0, 1200),
     checklist: Array.isArray(input.checklist) ? input.checklist.map(String).slice(0, 12) : [],
     checked: Array.isArray(input.checked) ? input.checked.map(String).slice(0, 12) : [],
-    aiTags: Array.isArray(input.aiTags) ? input.aiTags.map(String).slice(0, 12) : [],
-    listingText: String(input.listingText ?? "").slice(0, 1200)
+    aiTags: Array.isArray(input.aiTags) ? input.aiTags.map(String).slice(0, 12) : []
   };
 }
 
@@ -192,7 +189,6 @@ function itemToResponse(item) {
     checklist: item.checklist ?? [],
     checked: item.checked ?? [],
     aiTags: item.aiTags ?? [],
-    listingText: item.listingText ?? "",
     createdAt: item.createdAt,
     updatedAt: item.updatedAt,
     photoCount: (item.photoKeys ?? []).length,

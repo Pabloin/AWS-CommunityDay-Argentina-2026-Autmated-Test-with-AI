@@ -5,10 +5,8 @@ import {
   Camera,
   Check,
   ChevronRight,
-  Clipboard,
   Cloud,
   CloudOff,
-  DollarSign,
   ImagePlus,
   Loader2,
   PackageCheck,
@@ -23,8 +21,8 @@ import QRCode from "qrcode";
 import jsQR from "jsqr";
 import "./styles.css";
 
-type Status = "review" | "ready" | "published" | "sold" | "keep";
-type Mode = "capture" | "organize" | "sell";
+type Status = "review" | "identified" | "labeled" | "stored" | "missing";
+type Mode = "capture" | "organize" | "labels";
 
 type Item = {
   id: string;
@@ -50,7 +48,6 @@ type Draft = {
   photos: string[];
   checklist: string[];
   aiTags: string[];
-  listingText: string;
 };
 
 type ApiPhoto = {
@@ -66,11 +63,10 @@ type AiSuggestion = {
   category: string;
   description: string;
   condition: string;
-  suggestedPriceLabel: string;
+  qrLabel: string;
   locationHint: string;
   tags: string[];
   checklist: string[];
-  listingText: string;
 };
 
 const storageKey = "stocklens-v05-home-catalog";
@@ -86,10 +82,10 @@ const categoryChecklist: Record<string, string[]> = {
 
 const statusLabels: Record<Status, string> = {
   review: "Para revisar",
-  ready: "Listo para vender",
-  published: "Publicado",
-  sold: "Vendido",
-  keep: "No vender"
+  identified: "Identificado",
+  labeled: "Con QR",
+  stored: "Guardado",
+  missing: "No ubicado"
 };
 
 const sampleItems: Item[] = [
@@ -100,7 +96,7 @@ const sampleItems: Item[] = [
     location: "Galpon / caja azul",
     status: "review",
     price: 18000,
-    notes: "Revisar si estan todas las fichas y billetes antes de publicar.",
+    notes: "Revisar si estan todas las fichas y billetes antes de etiquetar.",
     checklist: categoryChecklist["Juego de mesa"],
     checked: ["Caja visible", "Tablero"],
     photos: [],
@@ -111,9 +107,9 @@ const sampleItems: Item[] = [
     name: "Rayuela",
     category: "Libro",
     location: "Biblioteca del living",
-    status: "ready",
+    status: "labeled",
     price: 9500,
-    notes: "Buen estado general. Fotos de tapa y lomo listas.",
+    notes: "Buen estado general. Ficha lista para encontrarlo por QR.",
     checklist: categoryChecklist.Libro,
     checked: ["Tapa", "Lomo", "Autor", "Sin hojas sueltas"],
     photos: [],
@@ -143,8 +139,7 @@ const emptyDraft: Draft = {
   notes: "",
   photos: [],
   checklist: [],
-  aiTags: [],
-  listingText: ""
+  aiTags: []
 };
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "";
@@ -160,9 +155,17 @@ function loadItems() {
   }
 }
 
+function normalizeStatus(status: string | undefined): Status {
+  if (status === "identified" || status === "labeled" || status === "stored" || status === "missing") return status;
+  if (status === "ready") return "labeled";
+  if (status === "published" || status === "sold") return "stored";
+  return "review";
+}
+
 function fromApiItem(item: ApiItem): Item {
   return {
     ...item,
+    status: normalizeStatus(item.status),
     photos: (item.photos ?? []).map((photo) => photo.url)
   };
 }
@@ -176,14 +179,6 @@ function makeId(name: string) {
     .slice(0, 4)
     .toUpperCase();
   return `SLV5-${prefix || "ITEM"}-${Math.random().toString(36).slice(2, 5).toUpperCase()}`;
-}
-
-function money(value: number) {
-  return new Intl.NumberFormat("es-AR", {
-    style: "currency",
-    currency: "ARS",
-    maximumFractionDigits: 0
-  }).format(value);
 }
 
 function CloudIcon({ state }: { state: "loading" | "ready" | "local" | "saving" }) {
@@ -242,7 +237,7 @@ function QrPanel({ item }: { item: Item }) {
         <div>
           <strong>Etiqueta QR</strong>
           <span>{item.id}</span>
-          <small>Escaneá para abrir este objeto.</small>
+          <small>Escanea para abrir esta ficha.</small>
         </div>
         <a href={qr} download={`${item.id}.png`}>
           Descargar
@@ -272,7 +267,7 @@ function App() {
   const frameRef = useRef<number | null>(null);
   const scanBusyRef = useRef(false);
   const selected = items.find((item) => item.id === selectedId) ?? items[0];
-  const ready = items.filter((item) => item.status === "ready" || item.status === "published");
+  const labeled = items.filter((item) => item.status === "labeled" || item.status === "stored");
   const pending = items.filter((item) => item.status === "review").length;
   const filtered = items.filter((item) =>
     `${item.name} ${item.category} ${item.location} ${item.id}`.toLowerCase().includes(query.toLowerCase())
@@ -509,10 +504,9 @@ function App() {
       name: current.name || suggestion.name,
       category: knownCategory,
       location: current.location || suggestion.locationHint,
-      notes: [suggestion.description, suggestion.condition, suggestion.suggestedPriceLabel].filter(Boolean).join("\n"),
+      notes: [suggestion.description, suggestion.condition, suggestion.qrLabel].filter(Boolean).join("\n"),
       checklist: suggestion.checklist,
-      aiTags: suggestion.tags,
-      listingText: suggestion.listingText
+      aiTags: suggestion.tags
     }));
   };
 
@@ -556,7 +550,7 @@ function App() {
       category: draft.category,
       location: draft.location.trim() || "Sin ubicacion",
       status: draft.status,
-      price: Number(draft.price) || 0,
+      price: 0,
       notes: draft.notes.trim(),
       checklist: draft.checklist.length ? draft.checklist : categoryChecklist[draft.category] ?? ["Foto principal", "Estado visible"],
       checked: draft.photos.length ? ["Foto principal"] : [],
@@ -609,12 +603,6 @@ function App() {
     updateItem({ checked });
   };
 
-  const listingText = selected
-    ? `${selected.name}\n${selected.category} en ${selected.location}\nEstado: ${
-        statusLabels[selected.status]
-      }\nPrecio sugerido: ${money(selected.price)}\n${selected.notes}`
-    : "";
-
   return (
     <main className="app-shell">
       <header className="app-header">
@@ -636,10 +624,10 @@ function App() {
       <section className="hero">
         <div className="hero-copy">
           <span className="hero-pill">
-            <Sparkles size={15} /> Galpon a catalogo
+            <Sparkles size={15} /> Foto a ficha QR
           </span>
           <h1>Una foto y ya existe.</h1>
-          <p>Ordena juegos, libros y objetos guardados antes de publicarlos.</p>
+          <p>La IA interpreta el objeto, crea una ficha y lo deja listo para identificar con QR.</p>
         </div>
         <div className="hero-card">
           <strong>{items.length}</strong>
@@ -654,13 +642,13 @@ function App() {
 
       <nav className="tabs" aria-label="Secciones">
         <button className={mode === "capture" ? "active" : ""} type="button" onClick={() => setMode("capture")}>
-          <Camera size={17} /> Capturar
+          <Camera size={17} /> Clasificar
         </button>
         <button className={mode === "organize" ? "active" : ""} type="button" onClick={() => setMode("organize")}>
           <Archive size={17} /> Organizar
         </button>
-        <button className={mode === "sell" ? "active" : ""} type="button" onClick={() => setMode("sell")}>
-          <Tag size={17} /> Vender
+        <button className={mode === "labels" ? "active" : ""} type="button" onClick={() => setMode("labels")}>
+          <Tag size={17} /> Etiquetas
         </button>
       </nav>
 
@@ -670,8 +658,8 @@ function App() {
           <span>por revisar</span>
         </article>
         <article>
-          <strong>{ready.length}</strong>
-          <span>vendibles</span>
+          <strong>{labeled.length}</strong>
+          <span>con QR</span>
         </article>
         <article>
           <strong>{items.filter((item) => item.photos.length).length}</strong>
@@ -725,7 +713,7 @@ function App() {
                 <button type="button" onClick={analyzePhoto} disabled={analysisState === "loading"}>
                   <Sparkles size={18} /> {analysisState === "loading" ? "Analizando..." : "Analizar con IA"}
                 </button>
-                <p>{analysisMessage || "Bedrock puede sugerir nombre, descripcion, etiquetas y checklist."}</p>
+                <p>{analysisMessage || "Bedrock puede sugerir nombre, descripcion, etiquetas y checklist de identificacion."}</p>
                 {draft.aiTags.length ? (
                   <div className="tag-row">
                     {draft.aiTags.map((tag) => (
@@ -754,15 +742,6 @@ function App() {
                     <option key={category}>{category}</option>
                   ))}
                 </select>
-              </label>
-              <label>
-                Precio
-                <input
-                  inputMode="numeric"
-                  value={draft.price}
-                  onChange={(event) => setDraft({ ...draft, price: event.target.value })}
-                  placeholder="18000"
-                />
               </label>
             </div>
 
@@ -834,11 +813,11 @@ function App() {
                   <h2>{selected.name}</h2>
                   <p>{selected.location}</p>
                 </div>
-                <strong>{money(selected.price)}</strong>
+                <strong>{selected.photos.length ? `${selected.photos.length} foto${selected.photos.length === 1 ? "" : "s"}` : "Sin foto"}</strong>
               </div>
 
               <div className="status-actions">
-                {(["review", "ready", "published", "sold", "keep"] as Status[]).map((status) => (
+                {(["review", "identified", "labeled", "stored", "missing"] as Status[]).map((status) => (
                   <button
                     key={status}
                     type="button"
@@ -852,7 +831,7 @@ function App() {
 
               <div className="checklist">
                 <div className="section-title">
-                  <strong>Antes de vender</strong>
+                  <strong>Antes de etiquetar</strong>
                   <span>
                     {selected.checked.length}/{selected.checklist.length}
                   </span>
@@ -871,15 +850,15 @@ function App() {
         </>
       ) : null}
 
-      {mode === "sell" ? (
+      {mode === "labels" ? (
         <section className="sell-stack">
-          {ready.length ? (
-            ready.map((item) => (
+          {labeled.length ? (
+            labeled.map((item) => (
               <article key={item.id} className="sell-card" onClick={() => setSelectedId(item.id)}>
                 <div className="sell-thumb">{item.photos[0] ? <img src={item.photos[0]} alt={item.name} /> : <PackageCheck size={30} />}</div>
                 <div>
                   <strong>{item.name}</strong>
-                  <span>{money(item.price)}</span>
+                  <span>{item.id}</span>
                   <small>{item.location}</small>
                 </div>
               </article>
@@ -887,22 +866,20 @@ function App() {
           ) : (
             <div className="empty-state">
               <PackageCheck size={28} />
-              <strong>Todavia no hay objetos listos</strong>
-              <span>Marca alguno como listo para vender.</span>
+              <strong>Todavia no hay objetos con QR</strong>
+              <span>Marca alguno como identificado o con QR.</span>
             </div>
           )}
 
           {selected ? (
             <section className="panel listing-panel">
               <div className="section-title">
-                <strong>Texto para publicar</strong>
-                <button type="button" onClick={() => navigator.clipboard?.writeText(listingText)}>
-                  <Clipboard size={16} /> Copiar
-                </button>
+                <strong>Ficha para QR</strong>
               </div>
-              <pre>{listingText}</pre>
-              <button className="primary-action" type="button" onClick={() => updateItem({ status: "published" })}>
-                <DollarSign size={18} /> Marcar publicado
+              <pre>{`${selected.name}\n${selected.category} en ${selected.location}\nEstado: ${statusLabels[selected.status]}\n${selected.notes}`}</pre>
+              <QrPanel item={selected} />
+              <button className="primary-action" type="button" onClick={() => updateItem({ status: "labeled" })}>
+                <QrCode size={18} /> Marcar con QR
               </button>
             </section>
           ) : null}

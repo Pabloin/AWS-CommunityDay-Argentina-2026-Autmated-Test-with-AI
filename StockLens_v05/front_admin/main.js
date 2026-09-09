@@ -1,10 +1,14 @@
 const apiBaseUrl = window.STOCKLENS_API_BASE_URL || "";
 const statusLabels = {
   review: "Para revisar",
-  ready: "Listo para vender",
-  published: "Publicado",
-  sold: "Vendido",
-  keep: "No vender"
+  identified: "Identificado",
+  labeled: "Con QR",
+  stored: "Guardado",
+  missing: "No ubicado",
+  ready: "Con QR",
+  published: "Guardado",
+  sold: "Guardado",
+  keep: "Para revisar"
 };
 
 let items = [];
@@ -18,14 +22,6 @@ const total = document.querySelector("#total");
 const photos = document.querySelector("#photos");
 const ready = document.querySelector("#ready");
 
-function money(value) {
-  return new Intl.NumberFormat("es-AR", {
-    style: "currency",
-    currency: "ARS",
-    maximumFractionDigits: 0
-  }).format(Number(value || 0));
-}
-
 function escapeHtml(value) {
   return String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -37,7 +33,7 @@ function escapeHtml(value) {
 function renderSummary() {
   total.textContent = String(items.length);
   photos.textContent = String(items.reduce((sum, item) => sum + (item.photos?.length ?? 0), 0));
-  ready.textContent = String(items.filter((item) => item.status === "ready" || item.status === "published").length);
+  ready.textContent = String(items.filter((item) => item.status === "labeled" || item.status === "stored" || item.status === "ready").length);
 }
 
 function visibleItems() {
@@ -77,7 +73,6 @@ function render() {
               </div>
               <span class="status ${escapeHtml(item.status)}">${escapeHtml(statusLabels[item.status] ?? item.status)}</span>
             </div>
-            <strong>${money(item.price)}</strong>
             ${tags ? `<div class="tags">${tags}</div>` : ""}
             ${item.notes ? `<p class="notes">${escapeHtml(item.notes)}</p>` : ""}
             ${checklist ? `<ul class="checklist">${checklist}</ul>` : ""}
