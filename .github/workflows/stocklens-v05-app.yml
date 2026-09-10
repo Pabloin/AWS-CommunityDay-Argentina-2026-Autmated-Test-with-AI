@@ -11,6 +11,7 @@ on:
       - "StockLens_v05/front_mobile/**"
       - "StockLens_v05/front_web/**"
       - "StockLens_v05/backend/**"
+      - "StockLens_v05/testing/**"
       - ".github/workflows/stocklens-v05-app.yml"
 
 permissions:
@@ -24,7 +25,21 @@ env:
   ADMIN_DOMAIN_NAME: web-v5.lens.glaciar.org
 
 jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Run Layer 02 unit tests
+        run: ./StockLens_v05/testing/layer-02-unit/run.sh
+
   build-and-deploy:
+    needs: unit-tests
     if: |
       (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') &&
       (github.event_name != 'push' || !contains(github.event.head_commit.message, '[infra-first]'))

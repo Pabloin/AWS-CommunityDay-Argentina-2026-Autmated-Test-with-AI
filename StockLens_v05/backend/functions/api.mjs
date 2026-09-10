@@ -5,6 +5,16 @@ import { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand } from "@a
 import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import QRCode from "qrcode";
+import {
+  extractText,
+  normalizeItem,
+  normalizeSuggestion,
+  parseBody,
+  parseDataUrl,
+  parseJson,
+  pathParts,
+  publicItemUrl as buildPublicItemUrl
+} from "./domain.mjs";
 
 const bedrock = new BedrockRuntimeClient({});
 const dynamodb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
@@ -26,9 +36,7 @@ const corsHeaders = {
 const now = () => new Date().toISOString();
 
 function publicItemUrl(itemId) {
-  const url = new URL(publicAppUrl);
-  url.searchParams.set("item", itemId);
-  return url.toString();
+  return buildPublicItemUrl(publicAppUrl, itemId);
 }
 
 function response(statusCode, body) {
@@ -47,62 +55,6 @@ function textResponse(statusCode, contentType, body) {
       "content-type": contentType
     },
     body
-  };
-}
-
-function parseBody(event) {
-  if (!event.body) return {};
-  return JSON.parse(event.isBase64Encoded ? Buffer.from(event.body, "base64").toString("utf8") : event.body);
-}
-
-function pathParts(event) {
-  return (event.rawPath ?? event.path ?? "/").split("/").filter(Boolean);
-}
-
-function parseDataUrl(dataUrl) {
-  const match = /^data:image\/(png|jpe?g|webp);base64,(.+)$/i.exec(dataUrl ?? "");
-  if (!match) {
-    throw new Error("La imagen debe llegar como data URL png, jpeg o webp.");
-  }
-
-  const format = match[1].toLowerCase().replace("jpg", "jpeg");
-  const bytes = Buffer.from(match[2], "base64");
-  if (bytes.byteLength > 3_750_000) {
-    throw new Error("La imagen es demasiado grande para analizarla.");
-  }
-
-  return { format, bytes, contentType: `image/${format}` };
-}
-
-function extractText(output) {
-  const content = output?.message?.content ?? [];
-  return content.map((part) => part.text ?? "").join("\n").trim();
-}
-
-function parseJson(text) {
-  const fenced = /```(?:json)?\s*([\s\S]*?)```/i.exec(text);
-  const raw = fenced?.[1] ?? text;
-  const start = raw.indexOf("{");
-  const end = raw.lastIndexOf("}");
-  if (start === -1 || end === -1 || end <= start) {
-    throw new Error("Bedrock no devolvio JSON.");
-  }
-  return JSON.parse(raw.slice(start, end + 1));
-}
-
-function normalizeSuggestion(parsed) {
-  const checklist = Array.isArray(parsed.checklist) ? parsed.checklist.slice(0, 8) : [];
-  const tags = Array.isArray(parsed.tags) ? parsed.tags.slice(0, 8) : [];
-
-  return {
-    name: String(parsed.name ?? "Objeto sin identificar").slice(0, 80),
-    category: String(parsed.category ?? "Objeto").slice(0, 40),
-    description: String(parsed.description ?? "").slice(0, 400),
-    condition: String(parsed.condition ?? "Para revisar").slice(0, 80),
-    qrLabel: String(parsed.qrLabel ?? "Etiqueta QR pendiente").slice(0, 80),
-    locationHint: String(parsed.locationHint ?? "Galpon / caja").slice(0, 80),
-    tags,
-    checklist: checklist.length ? checklist : ["Foto principal", "Estado visible", "Descripcion revisada"]
   };
 }
 
@@ -151,20 +103,6 @@ No inventes marca, edicion ni estado si no se ve. Si tenes duda, marcala como re
 
   const result = await bedrock.send(command);
   return normalizeSuggestion(parseJson(extractText(result.output)));
-}
-
-function normalizeItem(input) {
-  return {
-    name: String(input.name ?? "Objeto sin nombre").slice(0, 100),
-    category: String(input.category ?? "Objeto").slice(0, 50),
-    location: String(input.location ?? "Sin ubicacion").slice(0, 100),
-    status: String(input.status ?? "review").slice(0, 30),
-    price: Number(input.price ?? 0),
-    notes: String(input.notes ?? "").slice(0, 1200),
-    checklist: Array.isArray(input.checklist) ? input.checklist.map(String).slice(0, 12) : [],
-    checked: Array.isArray(input.checked) ? input.checked.map(String).slice(0, 12) : [],
-    aiTags: Array.isArray(input.aiTags) ? input.aiTags.map(String).slice(0, 12) : []
-  };
 }
 
 async function signPhotos(photoKeys) {
