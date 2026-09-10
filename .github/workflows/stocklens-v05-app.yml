@@ -12,16 +12,8 @@ on:
           - "false"
           - "true"
   workflow_run:
-    workflows: ["StockLens v05 Infrastructure"]
+    workflows: ["StockLens v05 Staging Application"]
     types: [completed]
-  push:
-    branches: [master]
-    paths:
-      - "StockLens_v05/front_mobile/**"
-      - "StockLens_v05/front_web/**"
-      - "StockLens_v05/backend/**"
-      - "StockLens_v05/testing/**"
-      - ".github/workflows/stocklens-v05-app.yml"
 
 permissions:
   id-token: write
@@ -50,8 +42,10 @@ jobs:
   build-and-deploy:
     needs: unit-tests
     if: |
-      (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') &&
-      (github.event_name != 'push' || !contains(github.event.head_commit.message, '[infra-first]'))
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       (github.event.workflow_run.event != 'push' ||
+        !contains(github.event.workflow_run.head_commit.message, '[infra-first]')))
     runs-on: ubuntu-latest
     defaults:
       run:

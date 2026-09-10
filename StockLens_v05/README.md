@@ -72,6 +72,20 @@ La infraestructura vive en:
 StockLens_v05/terraform
 ```
 
+La implementacion AWS esta modularizada:
+
+```text
+StockLens_v05/terraform/modules/stocklens
+```
+
+Produccion conserva el root y state actuales. Staging tiene un root separado en
+`StockLens_v05/terraform/environments/staging`. El contrato completo esta en
+[`ARQUITECTURA_REQ_05.md`](ARQUITECTURA_REQ_05.md).
+
+Staging reutiliza los buckets S3 v05 mediante prefijos propios; no crea buckets
+adicionales. Lambda, API Gateway y DynamoDB si son independientes para evitar
+que una prueba modifique el catalogo de produccion.
+
 Backend:
 
 ```text
@@ -124,6 +138,13 @@ Aplicacion:
 
 ```text
 .github/workflows/stocklens-v05-app.yml
+```
+
+Staging:
+
+```text
+.github/workflows/stocklens-v05-staging-infra.yml
+.github/workflows/stocklens-v05-staging-app.yml
 ```
 
 Antes de construir o desplegar, el pipeline ejecuta la capa unitaria sin

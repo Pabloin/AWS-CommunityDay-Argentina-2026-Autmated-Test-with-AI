@@ -1,0 +1,83 @@
+name: StockLens v05 Staging Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "Apply staging Terraform changes"
+        required: true
+        default: "true"
+        type: choice
+        options:
+          - "false"
+          - "true"
+  push:
+    branches: [master]
+    paths:
+      - "StockLens_v05/terraform/modules/**"
+      - "StockLens_v05/terraform/environments/staging/**"
+      - ".github/workflows/stocklens-v05-staging-infra.yml"
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  TF_WORKING_DIR: StockLens_v05/terraform/environments/staging
+  TF_VAR_github_owner: Pabloin
+  TF_VAR_github_repo: AWS-CommunityDay-Argentina-2026-Autmated-Test-with-AI
+  TF_VAR_repository_url: git@github-Pabloin:Pabloin/AWS-CommunityDay-Argentina-2026-Autmated-Test-with-AI.git
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ env.TF_WORKING_DIR }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: hashicorp/setup-terraform@v4
+
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.STOCKLENS_V05_INFRA_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: stocklens-v05-staging-infra
+          allowed-account-ids: "442809140287"
+
+      - name: Prepare Lambda package input
+        run: |
+          cd ../../..
+          npm ci --prefix backend
+          npm --prefix backend run package
+
+      - name: Terraform fmt
+        run: terraform fmt -check -recursive
+
+      - name: Terraform init
+        run: terraform init -backend-config=backend.hcl
+
+      - name: Terraform validate
+        run: terraform validate
+
+      - name: Terraform plan
+        run: terraform plan -out=tfplan
+
+      - name: Reject destructive staging plan
+        run: |
+          terraform show -json tfplan > "$RUNNER_TEMP/tfplan.json"
+          destroy_count="$(jq '[.resource_changes[]? | select(.change.actions | index("delete"))] | length' "$RUNNER_TEMP/tfplan.json")"
+          if [ "$destroy_count" -ne 0 ]; then
+            echo "::error title=Destructive plan blocked::$destroy_count staging resources would be destroyed or replaced."
+            exit 1
+          fi
+
+      - name: Terraform apply
+        if: github.event_name == 'push' || inputs.apply == 'true'
+        run: terraform apply -auto-approve tfplan
+
+      - name: Terraform outputs
+        if: github.event_name == 'push' || inputs.apply == 'true'
+        run: terraform output

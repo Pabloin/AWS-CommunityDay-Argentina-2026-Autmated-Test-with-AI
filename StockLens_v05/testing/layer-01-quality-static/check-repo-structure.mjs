@@ -10,7 +10,12 @@ const requiredPaths = [
   "StockLens_v05/front_web/config.js",
   "StockLens_v05/backend/functions/api.mjs",
   "StockLens_v05/terraform/main.tf",
-  ".github/workflows/stocklens-v05-app.yml"
+  "StockLens_v05/terraform/modules/stocklens/main.tf",
+  "StockLens_v05/terraform/environments/staging/main.tf",
+  "StockLens_v05/terraform/environments/staging/backend.hcl",
+  ".github/workflows/stocklens-v05-app.yml",
+  ".github/workflows/stocklens-v05-staging-app.yml",
+  ".github/workflows/stocklens-v05-staging-infra.yml"
 ];
 
 const missing = requiredPaths.filter((relativePath) => !existsSync(join(repoRoot, relativePath)));
@@ -23,8 +28,12 @@ if (missing.length) {
   process.exit(1);
 }
 
-const workflowPath = join(repoRoot, ".github/workflows/stocklens-v05-app.yml");
-const workflow = readFileSync(workflowPath, "utf8");
+const workflowPaths = [
+  ".github/workflows/stocklens-v05-app.yml",
+  ".github/workflows/stocklens-v05-staging-app.yml"
+];
+const workflows = workflowPaths.map((path) => readFileSync(join(repoRoot, path), "utf8"));
+const workflow = workflows.join("\n");
 
 const forbiddenWorkflowReferences = ["front_admin/config.js", "aws s3 sync front_admin", "StockLens_v05/front_admin/**"];
 const staleReferences = forbiddenWorkflowReferences.filter((text) => workflow.includes(text));
