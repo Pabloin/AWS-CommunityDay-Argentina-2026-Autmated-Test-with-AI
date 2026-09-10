@@ -53,18 +53,28 @@ Abrir:
 http://127.0.0.1:5190
 ```
 
-Los QR generados localmente apuntan a la app publica en
-`https://mobile-v5.lens.glaciar.org`, para que puedan abrirse desde cualquier
-telefono. El pipeline define esa direccion mediante `VITE_PUBLIC_APP_URL`.
+Los QR generados localmente apuntan a la URL versionada
+`https://mobile-v5.lens.glaciar.org`, para que la demo v5 siga siendo
+reproducible. El pipeline define esa direccion mediante `VITE_PUBLIC_APP_URL`.
 
 ## Despliegue En AWS
 
-Dominio propuesto:
+Dominios versionados:
 
 ```text
 https://mobile-v5.lens.glaciar.org
 https://web-v5.lens.glaciar.org
 ```
+
+Aliases estables que actualmente apuntan a las mismas distribuciones v5:
+
+```text
+https://mobile.lens.glaciar.org
+https://web.lens.glaciar.org
+```
+
+Los aliases estables se administran con Terraform y permiten que una futura
+version cambie el destino sin modificar la URL entregada a los usuarios.
 
 La infraestructura vive en:
 
@@ -118,8 +128,8 @@ incluyendo fotos, QR, tags, checklist y estado de organizacion.
 
 Recursos principales:
 
-- S3 + CloudFront para `mobile-v5`.
-- S3 + CloudFront para `web-v5`.
+- S3 + CloudFront para `mobile-v5` y su alias estable `mobile`.
+- S3 + CloudFront para `web-v5` y su alias estable `web`.
 - API Gateway HTTP API.
 - Lambda Node.js.
 - DynamoDB `stocklens-v05-items`.

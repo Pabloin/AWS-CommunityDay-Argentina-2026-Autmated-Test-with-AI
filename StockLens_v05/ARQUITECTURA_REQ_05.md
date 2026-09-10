@@ -60,6 +60,8 @@ no debe aplicarse.
 | Environment | `staging` | `demo` |
 | Mobile | `mobile-staging-v5.lens.glaciar.org` | `mobile-v5.lens.glaciar.org` |
 | Web | `web-staging-v5.lens.glaciar.org` | `web-v5.lens.glaciar.org` |
+| Alias estable Mobile | No aplica | `mobile.lens.glaciar.org` |
+| Alias estable Web | No aplica | `web.lens.glaciar.org` |
 | Tenant | `aws-cday-argentina-2026-v5-staging` | `aws-cday-argentina-2026-v5` |
 | State key | `stocklens/v05/staging/terraform.tfstate` | `stocklens/v05/terraform.tfstate` |
 
@@ -74,6 +76,11 @@ photos/tenants/aws-cday-argentina-2026-v5-staging/
 Cada ambiente mantiene distribuciones CloudFront, certificado, API Gateway,
 Lambda, tabla DynamoDB, roles IAM y Resource Group propios. Tambien se comparten
 la hosted zone de Route53 y el proveedor OIDC de GitHub ya existente.
+
+Los aliases sin version son el canal estable del producto. Permanecen junto a
+los nombres versionados y se mueven solamente mediante el pipeline de
+infraestructura. El certificado, CloudFront, Route53 y CORS deben declarar
+siempre el mismo conjunto de nombres.
 
 ## Pipelines
 

@@ -57,14 +57,18 @@ QR; la vista admin permite ver el catalogo compartido desde una notebook.
       <br />
       <strong>Mobile producto</strong>
       <br />
-      <a href="https://mobile-v5.lens.glaciar.org">mobile-v5.lens.glaciar.org</a>
+      <a href="https://mobile.lens.glaciar.org">mobile.lens.glaciar.org</a>
+      <br />
+      <small>Version: <a href="https://mobile-v5.lens.glaciar.org">mobile-v5.lens.glaciar.org</a></small>
     </td>
     <td align="center" width="50%" style="padding: 18px;">
       <img src="docs/qr/stocklens-v05-admin.svg" alt="QR StockLens v05 admin" width="170" />
       <br />
-      <strong>Admin catalogo</strong>
+      <strong>Web catalogo</strong>
       <br />
-      <a href="https://admin-v5.lens.glaciar.org">admin-v5.lens.glaciar.org</a>
+      <a href="https://web.lens.glaciar.org">web.lens.glaciar.org</a>
+      <br />
+      <small>Version: <a href="https://web-v5.lens.glaciar.org">web-v5.lens.glaciar.org</a></small>
     </td>
   </tr>
 </table>

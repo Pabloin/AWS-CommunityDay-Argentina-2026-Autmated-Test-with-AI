@@ -53,7 +53,9 @@ module "stocklens" {
   public_hosted_zone_name  = var.public_hosted_zone_name
   public_hosted_zone_id    = var.public_hosted_zone_id
   mobile_domain_name       = var.mobile_domain_name
+  mobile_domain_aliases    = var.mobile_domain_aliases
   admin_domain_name        = var.admin_domain_name
+  admin_domain_aliases     = var.admin_domain_aliases
   bedrock_model_id         = var.bedrock_model_id
   lambda_package_path      = abspath("${path.root}/../../../backend/dist/api.zip")
 }

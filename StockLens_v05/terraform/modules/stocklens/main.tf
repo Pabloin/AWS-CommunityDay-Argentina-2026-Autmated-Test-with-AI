@@ -30,7 +30,9 @@ module "apps" {
   account_id               = data.aws_caller_identity.current.account_id
   project_name             = var.project_name
   mobile_domain_name       = var.mobile_domain_name
+  mobile_domain_aliases    = var.mobile_domain_aliases
   admin_domain_name        = var.admin_domain_name
+  admin_domain_aliases     = var.admin_domain_aliases
   public_hosted_zone_name  = var.public_hosted_zone_name
   public_hosted_zone_id    = var.public_hosted_zone_id
   create_storage_buckets   = var.create_storage_buckets
@@ -43,19 +45,21 @@ module "apps" {
 module "api" {
   source = "../api"
 
-  aws_region          = var.aws_region
-  account_id          = data.aws_caller_identity.current.account_id
-  project_name        = var.project_name
-  default_tenant_id   = var.default_tenant_id
-  bedrock_model_id    = var.bedrock_model_id
-  lambda_package_path = var.lambda_package_path
-  mobile_domain_name  = var.mobile_domain_name
-  admin_domain_name   = var.admin_domain_name
-  items_table_name    = module.storage.items_table_name
-  items_table_arn     = module.storage.items_table_arn
-  photos_bucket_name  = module.storage.photos_bucket_name
-  photos_bucket_arn   = module.storage.photos_bucket_arn
-  tags                = local.tags
+  aws_region            = var.aws_region
+  account_id            = data.aws_caller_identity.current.account_id
+  project_name          = var.project_name
+  default_tenant_id     = var.default_tenant_id
+  bedrock_model_id      = var.bedrock_model_id
+  lambda_package_path   = var.lambda_package_path
+  mobile_domain_name    = var.mobile_domain_name
+  mobile_domain_aliases = var.mobile_domain_aliases
+  admin_domain_name     = var.admin_domain_name
+  admin_domain_aliases  = var.admin_domain_aliases
+  items_table_name      = module.storage.items_table_name
+  items_table_arn       = module.storage.items_table_arn
+  photos_bucket_name    = module.storage.photos_bucket_name
+  photos_bucket_arn     = module.storage.photos_bucket_arn
+  tags                  = local.tags
 }
 
 module "cicd" {

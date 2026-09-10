@@ -72,10 +72,14 @@ resource "aws_cloudfront_origin_access_control" "mobile" {
 }
 
 resource "aws_acm_certificate" "mobile" {
-  provider                  = aws.us_east_1
-  domain_name               = var.mobile_domain_name
-  subject_alternative_names = [var.admin_domain_name]
-  validation_method         = "DNS"
+  provider    = aws.us_east_1
+  domain_name = var.mobile_domain_name
+  subject_alternative_names = distinct(concat(
+    [var.admin_domain_name],
+    var.mobile_domain_aliases,
+    var.admin_domain_aliases
+  ))
+  validation_method = "DNS"
   lifecycle {
     create_before_destroy = true
   }
@@ -109,7 +113,7 @@ resource "aws_cloudfront_distribution" "front_mobile" {
   is_ipv6_enabled     = true
   comment             = "StockLens v05 home catalog mobile"
   default_root_object = "index.html"
-  aliases             = [var.mobile_domain_name]
+  aliases             = concat([var.mobile_domain_name], var.mobile_domain_aliases)
 
   origin {
     domain_name              = local.mobile_origin_domain
@@ -158,7 +162,7 @@ resource "aws_cloudfront_distribution" "front_admin" {
   is_ipv6_enabled     = true
   comment             = "StockLens v05 catalog admin"
   default_root_object = "index.html"
-  aliases             = [var.admin_domain_name]
+  aliases             = concat([var.admin_domain_name], var.admin_domain_aliases)
 
   origin {
     domain_name              = local.admin_origin_domain
@@ -257,6 +261,32 @@ resource "aws_route53_record" "front_mobile" {
 resource "aws_route53_record" "front_admin" {
   zone_id = data.aws_route53_zone.public.zone_id
   name    = var.admin_domain_name
+  type    = "A"
+  alias {
+    name                   = aws_cloudfront_distribution.front_admin.domain_name
+    zone_id                = aws_cloudfront_distribution.front_admin.hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+
+resource "aws_route53_record" "front_mobile_alias" {
+  for_each = toset(var.mobile_domain_aliases)
+
+  zone_id = data.aws_route53_zone.public.zone_id
+  name    = each.value
+  type    = "A"
+  alias {
+    name                   = aws_cloudfront_distribution.front_mobile.domain_name
+    zone_id                = aws_cloudfront_distribution.front_mobile.hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+
+resource "aws_route53_record" "front_admin_alias" {
+  for_each = toset(var.admin_domain_aliases)
+
+  zone_id = data.aws_route53_zone.public.zone_id
+  name    = each.value
   type    = "A"
   alias {
     name                   = aws_cloudfront_distribution.front_admin.domain_name
