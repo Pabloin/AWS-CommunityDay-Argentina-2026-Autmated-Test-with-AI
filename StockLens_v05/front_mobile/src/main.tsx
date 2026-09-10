@@ -20,125 +20,31 @@ import {
 import QRCode from "qrcode";
 import jsQR from "jsqr";
 import stockLensLogo from "./assets/stocklens-logo.png";
+import {
+  applyAiSuggestion,
+  categoryChecklist,
+  emptyDraft,
+  fromApiItem,
+  itemIdFromQr,
+  loadItemsFromStorage,
+  makeId,
+  statusLabels,
+  type AiSuggestion,
+  type ApiItem,
+  type Draft,
+  type Item,
+  type Status
+} from "./catalog-domain";
 import "./styles.css";
-
-type Status = "review" | "identified" | "labeled" | "stored" | "missing";
 type Mode = "capture" | "scan" | "organize";
 
-type Item = {
-  id: string;
-  name: string;
-  category: string;
-  location: string;
-  status: Status;
-  price: number;
-  notes: string;
-  checklist: string[];
-  checked: string[];
-  photos: string[];
-  updatedAt: string;
-};
-
-type Draft = {
-  name: string;
-  category: string;
-  location: string;
-  status: Status;
-  price: string;
-  notes: string;
-  photos: string[];
-  checklist: string[];
-  aiTags: string[];
-};
-
-type ApiPhoto = {
-  url: string;
-};
-
-type ApiItem = Omit<Item, "photos"> & {
-  photos?: ApiPhoto[];
-};
-
-type AiSuggestion = {
-  name: string;
-  category: string;
-  description: string;
-  condition: string;
-  qrLabel: string;
-  locationHint: string;
-  tags: string[];
-  checklist: string[];
-};
-
 const storageKey = "stocklens-v05-home-catalog";
-
-const categoryChecklist: Record<string, string[]> = {
-  "Juego de mesa": ["Caja visible", "Tablero", "Fichas", "Cartas", "Dados", "Manual"],
-  Libro: ["Tapa", "Lomo", "Autor", "Edicion", "Sin hojas sueltas"],
-  Juguete: ["Foto principal", "Partes completas", "Estado visible", "Medidas"],
-  Herramienta: ["Marca", "Funcionando", "Accesorios", "Estado de uso"],
-  Deporte: ["Foto completa", "Ruedas o soporte", "Rayones", "Medidas"],
-  Objeto: ["Foto principal", "Estado visible", "Medidas", "Descripcion revisada"]
-};
-
-const statusLabels: Record<Status, string> = {
-  review: "Para revisar",
-  identified: "Identificado",
-  labeled: "Con QR",
-  stored: "Guardado",
-  missing: "No ubicado"
-};
-
-const emptyDraft: Draft = {
-  name: "",
-  category: "Juego de mesa",
-  location: "Galpon",
-  status: "review",
-  price: "",
-  notes: "",
-  photos: [],
-  checklist: [],
-  aiTags: []
-};
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "";
 const publicAppUrl = import.meta.env.VITE_PUBLIC_APP_URL ?? "https://mobile-v5.lens.glaciar.org";
 
 function loadItems() {
-  const raw = localStorage.getItem(storageKey);
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw) as Item[];
-    return Array.isArray(parsed) ? parsed.filter((item) => item.id !== "SLV5-RAYU-002") : [];
-  } catch {
-    return [];
-  }
-}
-
-function normalizeStatus(status: string | undefined): Status {
-  if (status === "identified" || status === "labeled" || status === "stored" || status === "missing") return status;
-  if (status === "ready") return "labeled";
-  if (status === "published" || status === "sold") return "stored";
-  return "review";
-}
-
-function fromApiItem(item: ApiItem): Item {
-  return {
-    ...item,
-    status: normalizeStatus(item.status),
-    photos: (item.photos ?? []).map((photo) => photo.url)
-  };
-}
-
-function makeId(name: string) {
-  const prefix = name
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-zA-Z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 4)
-    .toUpperCase();
-  return `SLV5-${prefix || "ITEM"}-${Math.random().toString(36).slice(2, 5).toUpperCase()}`;
+  return loadItemsFromStorage(localStorage.getItem(storageKey));
 }
 
 function CloudIcon({ state }: { state: "loading" | "ready" | "local" | "saving" }) {
@@ -306,24 +212,6 @@ function App() {
       reader.readAsDataURL(file);
     });
 
-  const itemIdFromQr = (payload: string) => {
-    const cleanPayload = payload.trim();
-    try {
-      const parsed = JSON.parse(cleanPayload);
-      for (const key of ["id", "assetId", "code", "labelCode"]) {
-        if (typeof parsed[key] === "string" && parsed[key].trim()) return parsed[key].trim();
-      }
-    } catch {
-      const urlItem = /\/items\/([^/?#]+)/i.exec(cleanPayload);
-      if (urlItem?.[1]) return decodeURIComponent(urlItem[1]);
-      const stockLensCode = /SLV5-[A-Z0-9-]+/i.exec(cleanPayload);
-      if (stockLensCode?.[0]) return stockLensCode[0].toUpperCase();
-      if (/^[a-zA-Z0-9._:-]{3,120}$/.test(cleanPayload)) return cleanPayload;
-      return "";
-    }
-    return "";
-  };
-
   const stopScanner = () => {
     if (frameRef.current) {
       window.cancelAnimationFrame(frameRef.current);
@@ -337,7 +225,26 @@ function App() {
 
   const openItemFromQrPayload = async (qrPayload: string) => {
     const itemId = itemIdFromQr(qrPayload);
-    if (!itemId) throw new Error("El QR no contiene un ID de StockLens v05.");
+    if (!itemId) {
+      if (!apiBaseUrl) throw new Error("Para importar un QR externo necesitás abrir la app conectada a AWS.");
+      setScanMessage("QR externo detectado. Leyendo la ficha vinculada...");
+      const result = await fetch(`${apiBaseUrl}/import-qr`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ qrPayload })
+      });
+      const payload = await result.json();
+      if (!result.ok) throw new Error(payload.message ?? "No se pudo importar la información del QR.");
+      const suggestion = payload.suggestion as AiSuggestion;
+      setDraft(applyAiSuggestion({ ...emptyDraft, category: "Objeto", location: "" }, suggestion));
+      setAnalysisState("ready");
+      setAnalysisMessage("Datos importados desde el QR. Revisalos y editá la ficha antes de guardarla.");
+      setScanState("idle");
+      setScanMessage("Ficha externa importada. Completá o corregí los datos antes de guardar.");
+      setDetailOpen(false);
+      setMode("capture");
+      return;
+    }
 
     if (!apiBaseUrl) {
       const localItem = items.find((item) => item.id === itemId);
@@ -387,7 +294,7 @@ function App() {
       if (scanBusyRef.current) return;
       scanBusyRef.current = true;
       try {
-        setScanMessage("QR detectado. Buscando ficha...");
+        setScanMessage("QR detectado. Buscando ficha o importando datos...");
         await openItemFromQrPayload(code.data);
         stopScanner();
       } catch (error) {
@@ -441,7 +348,7 @@ function App() {
         await video.play();
         if (cancelled) return;
         setScanState("loading");
-        setScanMessage("Camara activa. Apunta al QR para abrir la ficha.");
+        setScanMessage("Cámara activa. Apuntá al QR para abrir una ficha o importar datos.");
         scanBusyRef.current = false;
         frameRef.current = window.requestAnimationFrame(readVideoFrame);
       } catch {
@@ -474,16 +381,7 @@ function App() {
   useEffect(() => stopScanner, []);
 
   const applySuggestion = (suggestion: AiSuggestion) => {
-    const knownCategory = categoryChecklist[suggestion.category] ? suggestion.category : "Objeto";
-    setDraft((current) => ({
-      ...current,
-      name: current.name || suggestion.name,
-      category: knownCategory,
-      location: current.location || suggestion.locationHint,
-      notes: [suggestion.description, suggestion.condition, suggestion.qrLabel].filter(Boolean).join("\n"),
-      checklist: suggestion.checklist,
-      aiTags: suggestion.tags
-    }));
+    setDraft((current) => applyAiSuggestion(current, suggestion));
   };
 
   const analyzePhoto = async () => {
@@ -743,7 +641,7 @@ function App() {
             <div>
               <span className="section-kicker">Encontrar</span>
               <h2>Leé una etiqueta QR</h2>
-              <p>Apuntá la cámara al código para abrir la ficha y ver dónde está guardado.</p>
+              <p>Leé una etiqueta StockLens para abrirla o un QR externo para importar sus datos en una ficha editable.</p>
             </div>
           </div>
 

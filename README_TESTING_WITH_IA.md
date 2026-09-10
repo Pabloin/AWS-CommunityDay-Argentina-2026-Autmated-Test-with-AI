@@ -177,13 +177,20 @@ Demo de producto:
 - admin web;
 - QR por item y lectura desde mobile.
 
+Capas implementadas y ejecutables:
+
+- `StockLens_v05/testing/layer-01-quality-static`: build, sintaxis, Terraform y
+  consistencia de estructura.
+- `StockLens_v05/testing/layer-02-unit`: logica aislada de frontend y backend,
+  sin navegador ni AWS.
+
 ## Brecha actual
 
-Hoy la demo ya muestra bien el concepto IA + Playwright + evidencia. Para
-completar la historia de calidad por capas, conviene agregar:
+Hoy la demo ya muestra el concepto IA + Playwright + evidencia y StockLens v05
+tiene una base unitaria deterministica. Para completar la historia de calidad
+por capas, conviene agregar:
 
-- Vitest para frontend;
-- Vitest o Jest para backend;
+- tests de componentes React;
 - Postman/Newman para API;
 - tests de persistencia DynamoDB/S3;
 - un reporte consolidado que muestre que cada capa paso o fallo.

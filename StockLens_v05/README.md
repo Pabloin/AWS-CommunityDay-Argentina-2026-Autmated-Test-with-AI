@@ -124,6 +124,13 @@ Aplicacion:
 .github/workflows/stocklens-v05-app.yml
 ```
 
+Antes de construir o desplegar, el pipeline ejecuta la capa unitaria sin
+credenciales AWS:
+
+```text
+StockLens_v05/testing/layer-02-unit
+```
+
 Secrets:
 
 ```text
