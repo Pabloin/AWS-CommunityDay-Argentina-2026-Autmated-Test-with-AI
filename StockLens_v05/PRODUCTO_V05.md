@@ -75,7 +75,7 @@ Son estados de decision humana, no estados tecnicos.
 
 ```text
 1. Abrir StockLens v05.
-2. Clasificar "Monopoly edicion vieja".
+2. Clasificar una manguera o un matafuego.
 3. Marcar estado "Para revisar".
 4. Guardar ubicacion "Galpon / caja azul".
 5. Completar parte del checklist.

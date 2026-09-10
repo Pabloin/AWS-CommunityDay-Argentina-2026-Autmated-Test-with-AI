@@ -89,35 +89,6 @@ const statusLabels: Record<Status, string> = {
   missing: "No ubicado"
 };
 
-const sampleItems: Item[] = [
-  {
-    id: "SLV5-MONO-001",
-    name: "Monopoly edicion vieja",
-    category: "Juego de mesa",
-    location: "Galpon / caja azul",
-    status: "review",
-    price: 18000,
-    notes: "Revisar si estan todas las fichas y billetes antes de etiquetar.",
-    checklist: categoryChecklist["Juego de mesa"],
-    checked: ["Caja visible", "Tablero"],
-    photos: [],
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: "SLV5-PATI-003",
-    name: "Patineta clasica",
-    category: "Deporte",
-    location: "Baulera",
-    status: "review",
-    price: 42000,
-    notes: "Sacar foto de ruedas y verificar rulemanes.",
-    checklist: categoryChecklist.Deporte,
-    checked: ["Foto completa"],
-    photos: [],
-    updatedAt: new Date().toISOString()
-  }
-];
-
 const emptyDraft: Draft = {
   name: "",
   category: "Juego de mesa",
@@ -135,13 +106,12 @@ const publicAppUrl = import.meta.env.VITE_PUBLIC_APP_URL ?? "https://mobile-v5.l
 
 function loadItems() {
   const raw = localStorage.getItem(storageKey);
-  if (!raw) return sampleItems;
+  if (!raw) return [];
   try {
     const parsed = JSON.parse(raw) as Item[];
-    const currentItems = Array.isArray(parsed) ? parsed.filter((item) => item.id !== "SLV5-RAYU-002") : [];
-    return currentItems.length ? currentItems : sampleItems;
+    return Array.isArray(parsed) ? parsed.filter((item) => item.id !== "SLV5-RAYU-002") : [];
   } catch {
-    return sampleItems;
+    return [];
   }
 }
 
@@ -597,6 +567,7 @@ function App() {
   };
 
   const updateItem = (patch: Partial<Item>) => {
+    if (!selected) return;
     setItems((current) =>
       current.map((item) =>
         item.id === selected.id ? { ...item, ...patch, updatedAt: new Date().toISOString() } : item
@@ -605,6 +576,7 @@ function App() {
   };
 
   const toggleCheck = (label: string) => {
+    if (!selected) return;
     const checked = selected.checked.includes(label)
       ? selected.checked.filter((item) => item !== label)
       : [...selected.checked, label];
@@ -713,7 +685,7 @@ function App() {
                 required
                 value={draft.name}
                 onChange={(event) => setDraft({ ...draft, name: event.target.value })}
-                placeholder="Monopoly, taladro, patineta"
+                placeholder="Manguera, matafuego, herramienta"
               />
             </label>
 
@@ -860,7 +832,13 @@ function App() {
                 );
               })}
 
-              {!filtered.length ? (
+              {!items.length ? (
+                <div className="empty-state compact">
+                  <PackageCheck size={24} />
+                  <strong>Catálogo vacío</strong>
+                  <span>Clasificá el primer objeto con una foto. No hay datos demo cargados.</span>
+                </div>
+              ) : !filtered.length ? (
                 <div className="empty-state compact">
                   <Search size={24} />
                   <strong>No encontramos objetos</strong>
