@@ -16,10 +16,12 @@ echo "-- backend syntax"
 node --check StockLens_v05/backend/functions/api.mjs
 
 echo "-- terraform fmt"
-terraform -chdir=StockLens_v05/terraform fmt -check
+terraform -chdir=StockLens_v05/terraform fmt -check -recursive
 
 echo "-- terraform validate"
-terraform -chdir=StockLens_v05/terraform init -backend=false
-terraform -chdir=StockLens_v05/terraform validate
+terraform -chdir=StockLens_v05/terraform/environments/production init -backend=false
+terraform -chdir=StockLens_v05/terraform/environments/production validate
+terraform -chdir=StockLens_v05/terraform/environments/staging init -backend=false
+terraform -chdir=StockLens_v05/terraform/environments/staging validate
 
 echo "Layer 01 passed."

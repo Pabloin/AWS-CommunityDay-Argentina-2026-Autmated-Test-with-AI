@@ -72,6 +72,27 @@ La infraestructura vive en:
 StockLens_v05/terraform
 ```
 
+La implementacion AWS esta separada por componentes de arquitectura:
+
+```text
+StockLens_v05/terraform/modules/
+  apps/       S3 de frontends, CloudFront, ACM y Route53
+  storage/    DynamoDB y S3 de fotos
+  api/        Lambda, IAM de ejecucion y API Gateway
+  cicd/       GitHub OIDC y roles de los pipelines
+  stocklens/  composicion de los cuatro modulos
+```
+
+Produccion y staging tienen roots simetricos en
+`StockLens_v05/terraform/environments/production` y
+`StockLens_v05/terraform/environments/staging`. Ambos conservan states remotos
+independientes. El contrato completo esta en
+[`ARQUITECTURA_REQ_05.md`](ARQUITECTURA_REQ_05.md).
+
+Staging reutiliza los buckets S3 v05 mediante prefijos propios; no crea buckets
+adicionales. Lambda, API Gateway y DynamoDB si son independientes para evitar
+que una prueba modifique el catalogo de produccion.
+
 Backend:
 
 ```text
@@ -126,6 +147,13 @@ Aplicacion:
 .github/workflows/stocklens-v05-app.yml
 ```
 
+Staging:
+
+```text
+.github/workflows/stocklens-v05-staging-infra.yml
+.github/workflows/stocklens-v05-staging-app.yml
+```
+
 Antes de construir o desplegar, el pipeline ejecuta la capa unitaria sin
 credenciales AWS:
 
@@ -147,9 +175,17 @@ STOCKLENS_V05_INFRA_ROLE_ARN
 STOCKLENS_V05_APP_ROLE_ARN
 ```
 
-Para el primer apply de infraestructura, el workflow puede reutilizar el secret
-`STOCKLENS_V04_INFRA_ROLE_ARN` como bootstrap si `STOCKLENS_V05_INFRA_ROLE_ARN`
-todavia no existe. Despues del primer apply, Terraform imprime:
+En una cuenta nueva existe un unico paso administrativo de bootstrap:
+
+```bash
+AWS_PROFILE=sebas StockLens_v05/scripts/bootstrap-github-oidc-role.sh create
+```
+
+El script no ejecuta Terraform. Crea el provider OIDC si falta y un rol temporal,
+le adjunta `AdministratorAccess` e imprime el ARN para
+`STOCKLENS_V05_INFRA_ROLE_ARN`. Ese permiso amplio existe solamente durante el
+bootstrap. El primer apply se ejecuta desde GitHub Actions. Despues, Terraform
+imprime los roles definitivos:
 
 ```text
 github_actions_infra_role_arn
@@ -157,7 +193,15 @@ github_actions_app_role_arn
 ```
 
 Esos valores deben cargarse como secrets v5 para que la operacion quede separada
-de v4.
+de otras versiones. Finalmente se elimina el rol temporal:
+
+```bash
+AWS_PROFILE=sebas StockLens_v05/scripts/bootstrap-github-oidc-role.sh destroy
+```
+
+El provider OIDC no se elimina porque es compartido por los pipelines de la
+cuenta. En esta cuenta el provider se habia creado para v4; actualmente el
+workflow v5 exige exclusivamente su rol oficial y ya no tiene fallback a v4.
 
 El workflow de infraestructura corre plan/apply desde GitHub Actions. El workflow
 de aplicacion corre por cambios de frontend/backend y tambien despues de un

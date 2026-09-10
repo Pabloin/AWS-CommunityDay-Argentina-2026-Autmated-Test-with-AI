@@ -63,15 +63,17 @@ No llama AWS. No llama Bedrock. No crea recursos.
 
 ```bash
 terraform -chdir=StockLens_v05/terraform fmt -check
-terraform -chdir=StockLens_v05/terraform init -backend=false
-terraform -chdir=StockLens_v05/terraform validate
+terraform -chdir=StockLens_v05/terraform/environments/production init -backend=false
+terraform -chdir=StockLens_v05/terraform/environments/production validate
+terraform -chdir=StockLens_v05/terraform/environments/staging init -backend=false
+terraform -chdir=StockLens_v05/terraform/environments/staging validate
 ```
 
 Valida:
 
 - Formato IaC.
 - Sintaxis Terraform.
-- Referencias internas.
+- Referencias internas de production y staging.
 
 `init -backend=false` evita usar el state remoto. No aplica infraestructura.
 

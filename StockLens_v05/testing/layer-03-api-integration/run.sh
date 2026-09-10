@@ -15,6 +15,7 @@ API_BASE_URL="${API_BASE_URL%/}"
 
 echo "== Layer 03: API integration =="
 API_BASE_URL="$API_BASE_URL" \
+TEST_ORIGIN="${TEST_ORIGIN:-https://mobile-v5.lens.glaciar.org}" \
 RUN_BEDROCK_TEST="${RUN_BEDROCK_TEST:-false}" \
 JUNIT_REPORT_FILE="$REPORT_DIR/core.xml" \
   node "$LAYER_DIR/run-api-integration.mjs"

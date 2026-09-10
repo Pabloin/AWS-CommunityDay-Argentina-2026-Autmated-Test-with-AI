@@ -1,0 +1,259 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#07111f"/>
+      <stop offset="0.55" stop-color="#0b1727"/>
+      <stop offset="1" stop-color="#111e31"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="72%" cy="38%" r="70%">
+      <stop offset="0" stop-color="#1d7cff" stop-opacity=".13"/>
+      <stop offset="1" stop-color="#1d7cff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="awsBoundary" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#12253d" stop-opacity=".94"/>
+      <stop offset="1" stop-color="#0b1728" stop-opacity=".94"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#182b44"/>
+      <stop offset="1" stop-color="#102038"/>
+    </linearGradient>
+    <linearGradient id="aiCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#28304f"/>
+      <stop offset="1" stop-color="#171d38"/>
+    </linearGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" fill="none" stroke="#90a5bf" stroke-opacity=".035" stroke-width="1"/>
+    </pattern>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#000814" flood-opacity=".34"/>
+    </filter>
+    <filter id="softShadow" x="-15%" y="-15%" width="130%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000814" flood-opacity=".27"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10Z" fill="#75bfff"/>
+    </marker>
+    <marker id="arrowMuted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10Z" fill="#7890aa"/>
+    </marker>
+    <style>
+      text { font-family: Arial, Helvetica, sans-serif; }
+      .eyebrow { fill:#79bfff; font-size:18px; font-weight:700; letter-spacing:3px; }
+      .title { fill:#f7fbff; font-size:42px; font-weight:700; }
+      .subtitle { fill:#a9bdd2; font-size:21px; }
+      .zone { fill:#7fc4ff; font-size:17px; font-weight:700; letter-spacing:2px; }
+      .name { fill:#f6fbff; font-size:19px; font-weight:700; }
+      .detail { fill:#a9bdd2; font-size:15px; }
+      .micro { fill:#8098b1; font-size:13px; }
+      .flow { fill:#99cfff; font-size:13px; font-weight:700; letter-spacing:.4px; }
+      .card { fill:url(#card); stroke:#284361; stroke-width:1.5; }
+      .card-ai { fill:url(#aiCard); stroke:#7255a7; stroke-width:1.5; }
+      .edge { stroke:#75bfff; stroke-width:3; fill:none; marker-end:url(#arrow); }
+      .edge-muted { stroke:#7890aa; stroke-width:2.3; fill:none; marker-end:url(#arrowMuted); }
+      .edge-dashed { stroke:#7890aa; stroke-width:2; fill:none; stroke-dasharray:8 9; marker-end:url(#arrowMuted); }
+    </style>
+  </defs>
+
+  <rect width="1920" height="1080" fill="url(#bg)"/>
+  <rect width="1920" height="1080" fill="url(#glow)"/>
+  <rect width="1920" height="1080" fill="url(#grid)"/>
+
+  <text x="74" y="68" class="eyebrow">STOCKLENS · VERSIÓN 05</text>
+  <text x="74" y="119" class="title">Inventario visual serverless con IA y QR</text>
+  <text x="74" y="153" class="subtitle">Dos experiencias web, una API compartida y análisis multimodal con Amazon Bedrock</text>
+
+  <g filter="url(#softShadow)">
+    <rect x="62" y="236" width="254" height="570" rx="28" fill="#0c192b" stroke="#263d58" stroke-width="1.5"/>
+  </g>
+  <text x="91" y="276" class="zone">PERSONAS</text>
+
+  <g>
+    <rect x="88" y="319" width="202" height="176" rx="24" class="card"/>
+    <circle cx="134" cy="374" r="29" fill="#153b5a" stroke="#4ca6e8" stroke-width="1.5"/>
+    <rect x="123" y="353" width="22" height="40" rx="4" fill="none" stroke="#8bd0ff" stroke-width="3"/>
+    <circle cx="134" cy="387" r="1.8" fill="#8bd0ff"/>
+    <text x="176" y="366" class="name">App mobile</text>
+    <text x="176" y="391" class="detail">Clasificar y escanear</text>
+    <text x="108" y="435" class="detail">Foto · IA · ubicación</text>
+    <text x="108" y="459" class="detail">Ficha y etiqueta QR</text>
+  </g>
+
+  <g>
+    <rect x="88" y="548" width="202" height="176" rx="24" class="card"/>
+    <circle cx="134" cy="603" r="29" fill="#153b5a" stroke="#4ca6e8" stroke-width="1.5"/>
+    <rect x="117" y="589" width="34" height="23" rx="3" fill="none" stroke="#8bd0ff" stroke-width="3"/>
+    <path d="M126 619H142M134 612V619" fill="none" stroke="#8bd0ff" stroke-width="3" stroke-linecap="round"/>
+    <text x="176" y="595" class="name">Web admin</text>
+    <text x="176" y="620" class="detail">Catálogo compartido</text>
+    <text x="108" y="664" class="detail">Buscar y revisar fichas</text>
+    <text x="108" y="688" class="detail">Fotos, estado y QR</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="354" y="190" width="1504" height="694" rx="32" fill="url(#awsBoundary)" stroke="#3b5776" stroke-width="1.5"/>
+  </g>
+  <path d="M386 244H1826" stroke="#304a68" stroke-width="1"/>
+  <text x="392" y="228" class="zone">AWS CLOUD · US-EAST-1</text>
+  <text x="1652" y="228" class="micro">Terraform · tenant v5</text>
+
+  <!-- DNS and TLS -->
+  <g>
+    <rect x="400" y="278" width="248" height="122" rx="22" class="card"/>
+    <image href="aws-icons/amazon-route-53.svg" x="420" y="299" width="70" height="70"/>
+    <text x="507" y="325" class="name">Route 53</text>
+    <text x="507" y="351" class="detail">DNS público</text>
+    <text x="507" y="375" class="micro">mobile-v5 · web-v5</text>
+  </g>
+  <g>
+    <rect x="400" y="423" width="248" height="100" rx="22" class="card"/>
+    <image href="aws-icons/aws-certificate-manager.svg" x="420" y="438" width="66" height="66"/>
+    <text x="507" y="463" class="name">AWS Certificate</text>
+    <text x="507" y="486" class="name">Manager</text>
+    <text x="507" y="509" class="micro">TLS 1.2+</text>
+  </g>
+
+  <!-- Frontends -->
+  <text x="706" y="278" class="zone">ENTREGA WEB</text>
+  <g>
+    <rect x="692" y="298" width="252" height="125" rx="22" class="card"/>
+    <image href="aws-icons/amazon-cloudfront.svg" x="712" y="321" width="68" height="68"/>
+    <text x="798" y="344" class="name">CloudFront</text>
+    <text x="798" y="369" class="detail">Distribución mobile</text>
+    <text x="798" y="393" class="micro">HTTPS + OAC + SPA fallback</text>
+  </g>
+  <g>
+    <rect x="692" y="450" width="252" height="125" rx="22" class="card"/>
+    <image href="aws-icons/amazon-s3.svg" x="712" y="473" width="68" height="68"/>
+    <text x="798" y="496" class="name">Amazon S3</text>
+    <text x="798" y="521" class="detail">Frontend mobile privado</text>
+    <text x="798" y="545" class="micro">React + Vite</text>
+  </g>
+  <g>
+    <rect x="692" y="608" width="252" height="125" rx="22" class="card"/>
+    <image href="aws-icons/amazon-cloudfront.svg" x="712" y="631" width="68" height="68"/>
+    <text x="798" y="654" class="name">CloudFront</text>
+    <text x="798" y="679" class="detail">Distribución web admin</text>
+    <text x="798" y="703" class="micro">HTTPS + OAC + SPA fallback</text>
+  </g>
+  <g>
+    <rect x="692" y="760" width="252" height="92" rx="22" class="card"/>
+    <image href="aws-icons/amazon-s3.svg" x="710" y="772" width="67" height="67"/>
+    <text x="798" y="797" class="name">Amazon S3</text>
+    <text x="798" y="822" class="detail">Frontend web privado</text>
+    <text x="798" y="844" class="micro">HTML + JavaScript</text>
+  </g>
+
+  <!-- API -->
+  <text x="1000" y="278" class="zone">API SERVERLESS</text>
+  <g>
+    <rect x="986" y="347" width="222" height="142" rx="24" class="card"/>
+    <image href="aws-icons/amazon-api-gateway.svg" x="1008" y="378" width="76" height="76"/>
+    <text x="1100" y="398" class="name">API Gateway</text>
+    <text x="1100" y="424" class="detail">HTTP API</text>
+    <text x="1100" y="450" class="micro">/analyze · /items</text>
+    <text x="1100" y="470" class="micro">/items/{id}/qr</text>
+  </g>
+  <g>
+    <rect x="986" y="541" width="222" height="142" rx="24" class="card"/>
+    <image href="aws-icons/aws-lambda.svg" x="1008" y="570" width="76" height="76"/>
+    <text x="1100" y="589" class="name">AWS Lambda</text>
+    <text x="1100" y="615" class="detail">API Node.js 20</text>
+    <text x="1100" y="641" class="micro">512 MB · timeout 20 s</text>
+    <text x="1100" y="663" class="micro">QR + URLs firmadas</text>
+  </g>
+
+  <!-- Managed services -->
+  <text x="1290" y="278" class="zone">IA Y DATOS</text>
+  <g>
+    <rect x="1276" y="298" width="252" height="125" rx="22" class="card-ai"/>
+    <image href="aws-icons/amazon-bedrock.svg" x="1298" y="321" width="72" height="72"/>
+    <text x="1388" y="344" class="name">Amazon Bedrock</text>
+    <text x="1388" y="370" class="detail">Análisis multimodal</text>
+    <text x="1388" y="394" class="micro">Sugerencias estructuradas</text>
+  </g>
+  <g>
+    <rect x="1276" y="474" width="252" height="125" rx="22" class="card"/>
+    <image href="aws-icons/amazon-dynamodb.svg" x="1298" y="497" width="72" height="72"/>
+    <text x="1388" y="520" class="name">DynamoDB</text>
+    <text x="1388" y="546" class="detail">Metadatos del catálogo</text>
+    <text x="1388" y="570" class="micro">On-demand · PITR activo</text>
+  </g>
+  <g>
+    <rect x="1276" y="650" width="252" height="125" rx="22" class="card"/>
+    <image href="aws-icons/amazon-s3.svg" x="1298" y="673" width="72" height="72"/>
+    <text x="1388" y="696" class="name">Amazon S3</text>
+    <text x="1388" y="722" class="detail">Fotos privadas</text>
+    <text x="1388" y="746" class="micro">AES-256 · lifecycle 14 días</text>
+  </g>
+
+  <!-- Operations -->
+  <g>
+    <rect x="1580" y="298" width="226" height="125" rx="22" class="card"/>
+    <image href="aws-icons/amazon-cloudwatch.svg" x="1600" y="321" width="70" height="70"/>
+    <text x="1687" y="344" class="name">CloudWatch</text>
+    <text x="1687" y="370" class="detail">Logs de Lambda</text>
+    <text x="1687" y="394" class="micro">Operación y diagnóstico</text>
+  </g>
+  <g>
+    <rect x="1580" y="474" width="226" height="125" rx="22" class="card"/>
+    <image href="aws-icons/aws-iam.svg" x="1600" y="497" width="70" height="70"/>
+    <text x="1687" y="520" class="name">AWS IAM</text>
+    <text x="1687" y="546" class="detail">Permisos de ejecución</text>
+    <text x="1687" y="570" class="micro">Bedrock · DynamoDB · S3</text>
+  </g>
+
+  <!-- Runtime flows -->
+  <path d="M290 406H350Q374 406 392 374" class="edge"/>
+  <path d="M290 636H350Q374 636 392 374" class="edge"/>
+  <text x="314" y="355" class="flow">HTTPS</text>
+  <path d="M648 339H684" class="edge"/>
+  <path d="M648 374V670H684" class="edge-muted"/>
+  <path d="M648 472H670Q680 472 684 464" class="edge-dashed"/>
+  <path d="M818 423V442" class="edge"/>
+  <path d="M818 733V752" class="edge"/>
+  <path d="M944 512H962Q974 512 978 490" class="edge"/>
+  <path d="M944 806H962Q974 806 978 489" class="edge"/>
+  <text x="950" y="531" class="flow">HTTPS API</text>
+  <path d="M1097 489V533" class="edge"/>
+  <path d="M1208 595H1238Q1253 595 1268 361" class="edge"/>
+  <path d="M1208 612H1268" class="edge"/>
+  <path d="M1208 630H1238Q1253 630 1268 712" class="edge"/>
+  <text x="1228" y="342" class="flow">INFERENCIA</text>
+  <text x="1218" y="585" class="flow">GET · PUT</text>
+  <path d="M1208 565H1238V446H1552V537H1572" class="edge-dashed"/>
+  <path d="M1208 650H1238V814H1552V360H1572" class="edge-dashed"/>
+
+  <!-- Deployment lane -->
+  <rect x="62" y="925" width="1796" height="98" rx="24" fill="#0c192b" stroke="#29435f" stroke-width="1.5"/>
+  <text x="91" y="963" class="zone">ENTREGA CONTINUA</text>
+  <g>
+    <rect x="325" y="945" width="220" height="58" rx="16" fill="#152842" stroke="#34506f"/>
+    <circle cx="360" cy="974" r="19" fill="#233b58"/>
+    <text x="350" y="981" fill="#a9d7ff" font-size="20" font-weight="700">{ }</text>
+    <text x="391" y="970" class="name">GitHub Actions</text>
+    <text x="391" y="990" class="micro">infra + aplicación</text>
+  </g>
+  <path d="M545 974H620" class="edge"/>
+  <g>
+    <rect x="630" y="945" width="260" height="58" rx="16" fill="#152842" stroke="#34506f"/>
+    <image href="aws-icons/aws-sts.svg" x="644" y="950" width="48" height="48"/>
+    <text x="707" y="970" class="name">OIDC + AWS STS</text>
+    <text x="707" y="990" class="micro">credenciales temporales</text>
+  </g>
+  <path d="M890 974H965" class="edge"/>
+  <g>
+    <rect x="975" y="945" width="310" height="58" rx="16" fill="#152842" stroke="#34506f"/>
+    <image href="aws-icons/aws-iam.svg" x="988" y="951" width="46" height="46"/>
+    <text x="1048" y="970" class="name">Roles IAM separados</text>
+    <text x="1048" y="990" class="micro">infraestructura · aplicación</text>
+  </g>
+  <path d="M1285 974H1360" class="edge"/>
+  <g>
+    <rect x="1370" y="945" width="430" height="58" rx="16" fill="#152842" stroke="#34506f"/>
+    <text x="1397" y="970" fill="#f6fbff" font-size="17" font-weight="700">Terraform apply · build · deploy · invalidación</text>
+    <text x="1397" y="990" class="micro">S3 · Lambda · CloudFront</text>
+  </g>
+
+  <text x="72" y="1055" class="micro">Fuente técnica: StockLens_v05/terraform/main.tf y backend/functions/api.mjs</text>
+  <text x="1848" y="1055" text-anchor="end" class="micro">AWS Community Day Argentina 2026</text>
+</svg>

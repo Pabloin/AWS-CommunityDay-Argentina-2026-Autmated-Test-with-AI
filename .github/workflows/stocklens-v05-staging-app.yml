@@ -1,0 +1,121 @@
+name: StockLens v05 Staging Application
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_bedrock_integration:
+        description: "Run the non-deterministic Bedrock integration contract"
+        required: true
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+  workflow_run:
+    workflows: ["StockLens v05 Staging Infrastructure"]
+    types: [completed]
+  push:
+    branches: [master]
+    paths:
+      - "StockLens_v05/front_mobile/**"
+      - "StockLens_v05/front_web/**"
+      - "StockLens_v05/backend/**"
+      - "StockLens_v05/testing/**"
+      - ".github/workflows/stocklens-v05-staging-app.yml"
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  PROJECT_NAME: stocklens-v05-staging
+  MOBILE_BUCKET: stocklens-v05-front-mobile-442809140287
+  ADMIN_BUCKET: stocklens-v05-front-admin-442809140287
+  MOBILE_DOMAIN_NAME: mobile-staging-v5.lens.glaciar.org
+  ADMIN_DOMAIN_NAME: web-staging-v5.lens.glaciar.org
+  APP_ROLE_ARN: arn:aws:iam::442809140287:role/stocklens-v05-staging-github-actions-app-role
+
+jobs:
+  test-build-deploy:
+    if: |
+      (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') &&
+      (github.event_name != 'push' || !contains(github.event.head_commit.message, '[infra-first]'))
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: StockLens_v05
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Run Layer 02 unit tests
+        working-directory: .
+        run: ./StockLens_v05/testing/layer-02-unit/run.sh
+
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ env.APP_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: stocklens-v05-staging-app
+          allowed-account-ids: "442809140287"
+
+      - name: Resolve staging resources
+        id: resources
+        run: |
+          api_endpoint="$(aws apigatewayv2 get-apis --query "Items[?Name=='${PROJECT_NAME}-http-api'].ApiEndpoint | [0]" --output text)"
+          mobile_distribution_id="$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Quantity > \`0\` && contains(Aliases.Items, '${MOBILE_DOMAIN_NAME}')].Id | [0]" --output text)"
+          admin_distribution_id="$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Quantity > \`0\` && contains(Aliases.Items, '${ADMIN_DOMAIN_NAME}')].Id | [0]" --output text)"
+          for value in "$api_endpoint" "$mobile_distribution_id" "$admin_distribution_id"; do
+            if [ -z "$value" ] || [ "$value" = "None" ]; then
+              echo "::error title=Missing staging infrastructure::Run StockLens v05 Staging Infrastructure first."
+              exit 1
+            fi
+          done
+          echo "api_endpoint=$api_endpoint" >> "$GITHUB_OUTPUT"
+          echo "mobile_distribution_id=$mobile_distribution_id" >> "$GITHUB_OUTPUT"
+          echo "admin_distribution_id=$admin_distribution_id" >> "$GITHUB_OUTPUT"
+
+      - name: Build application candidate
+        env:
+          API_ENDPOINT: ${{ steps.resources.outputs.api_endpoint }}
+        run: |
+          npm ci --prefix front_mobile --include=optional
+          npm rebuild --prefix front_mobile esbuild
+          VITE_API_BASE_URL="$API_ENDPOINT" VITE_PUBLIC_APP_URL="https://${MOBILE_DOMAIN_NAME}" npm --prefix front_mobile run build
+          npm ci --prefix backend
+          npm --prefix backend run package
+          printf 'window.STOCKLENS_API_BASE_URL = "%s";\nwindow.STOCKLENS_MOBILE_APP_URL = "https://%s";\n' "$API_ENDPOINT" "$MOBILE_DOMAIN_NAME" > front_web/config.js
+
+      - name: Deploy candidate to staging
+        run: |
+          aws s3 sync front_mobile/dist "s3://${MOBILE_BUCKET}/staging/mobile" --delete
+          aws s3 sync front_web "s3://${ADMIN_BUCKET}/staging/web" --delete
+          aws lambda update-function-code --function-name "${PROJECT_NAME}-api" --zip-file fileb://backend/dist/api.zip
+          aws lambda wait function-updated-v2 --function-name "${PROJECT_NAME}-api"
+
+      - name: Run Layer 03 against staging
+        env:
+          API_BASE_URL: ${{ steps.resources.outputs.api_endpoint }}
+          TEST_ORIGIN: https://${{ env.MOBILE_DOMAIN_NAME }}
+          RUN_BEDROCK_TEST: ${{ inputs.run_bedrock_integration || 'false' }}
+          REPORT_DIR: ${{ runner.temp }}/stocklens-v05-staging-layer-03
+        run: ./testing/layer-03-api-integration/run.sh
+
+      - name: Publish staging integration report
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: stocklens-v05-staging-layer-03-${{ github.run_id }}
+          path: ${{ runner.temp }}/stocklens-v05-staging-layer-03
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Invalidate staging CloudFront
+        run: |
+          aws cloudfront create-invalidation --distribution-id "${{ steps.resources.outputs.mobile_distribution_id }}" --paths "/*"
+          aws cloudfront create-invalidation --distribution-id "${{ steps.resources.outputs.admin_distribution_id }}" --paths "/*"

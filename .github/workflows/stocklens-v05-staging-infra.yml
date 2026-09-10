@@ -1,20 +1,12 @@
-name: StockLens v05 Infrastructure
+name: StockLens v05 Staging Infrastructure
 
 on:
   workflow_dispatch:
     inputs:
       apply:
-        description: "Apply Terraform changes"
+        description: "Apply staging Terraform changes"
         required: true
-        default: "false"
-        type: choice
-        options:
-          - "false"
-          - "true"
-      allow_destroy:
-        description: "Allow a plan that destroys or replaces production resources"
-        required: true
-        default: "false"
+        default: "true"
         type: choice
         options:
           - "false"
@@ -22,12 +14,9 @@ on:
   push:
     branches: [master]
     paths:
-      - "StockLens_v05/terraform/**"
-      - ".github/workflows/stocklens-v05-infra.yml"
-  pull_request:
-    paths:
-      - "StockLens_v05/terraform/**"
-      - ".github/workflows/stocklens-v05-infra.yml"
+      - "StockLens_v05/terraform/modules/**"
+      - "StockLens_v05/terraform/environments/staging/**"
+      - ".github/workflows/stocklens-v05-staging-infra.yml"
 
 permissions:
   id-token: write
@@ -35,11 +24,10 @@ permissions:
 
 env:
   AWS_REGION: us-east-1
-  TF_WORKING_DIR: StockLens_v05/terraform/environments/production
+  TF_WORKING_DIR: StockLens_v05/terraform/environments/staging
   TF_VAR_github_owner: Pabloin
   TF_VAR_github_repo: AWS-CommunityDay-Argentina-2026-Autmated-Test-with-AI
   TF_VAR_repository_url: git@github-Pabloin:Pabloin/AWS-CommunityDay-Argentina-2026-Autmated-Test-with-AI.git
-  TF_VAR_github_oidc_provider_arn: arn:aws:iam::442809140287:oidc-provider/token.actions.githubusercontent.com
 
 jobs:
   terraform:
@@ -52,20 +40,11 @@ jobs:
 
       - uses: hashicorp/setup-terraform@v4
 
-      - name: Check AWS infra role secret
-        env:
-          ROLE_ARN: ${{ secrets.STOCKLENS_V05_INFRA_ROLE_ARN }}
-        run: |
-          if [ -z "$ROLE_ARN" ]; then
-            echo "::error title=Missing secret::Configure STOCKLENS_V05_INFRA_ROLE_ARN. For a new account, create the temporary role with StockLens_v05/scripts/bootstrap-github-oidc-role.sh."
-            exit 1
-          fi
-
       - uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.STOCKLENS_V05_INFRA_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
-          role-session-name: stocklens-v05-infra
+          role-session-name: stocklens-v05-staging-infra
           allowed-account-ids: "442809140287"
 
       - name: Prepare Lambda package input
@@ -86,20 +65,19 @@ jobs:
       - name: Terraform plan
         run: terraform plan -out=tfplan
 
-      - name: Reject destructive production plan
-        if: inputs.allow_destroy != 'true'
+      - name: Reject destructive staging plan
         run: |
           terraform show -json tfplan > "$RUNNER_TEMP/tfplan.json"
           destroy_count="$(jq '[.resource_changes[]? | select(.change.actions | index("delete"))] | length' "$RUNNER_TEMP/tfplan.json")"
           if [ "$destroy_count" -ne 0 ]; then
-            echo "::error title=Destructive plan blocked::$destroy_count resources would be destroyed or replaced."
+            echo "::error title=Destructive plan blocked::$destroy_count staging resources would be destroyed or replaced."
             exit 1
           fi
 
       - name: Terraform apply
-        if: github.event_name == 'workflow_dispatch' && inputs.apply == 'true'
+        if: github.event_name == 'push' || inputs.apply == 'true'
         run: terraform apply -auto-approve tfplan
 
       - name: Terraform outputs
-        if: github.event_name == 'workflow_dispatch' && inputs.apply == 'true'
+        if: github.event_name == 'push' || inputs.apply == 'true'
         run: terraform output
