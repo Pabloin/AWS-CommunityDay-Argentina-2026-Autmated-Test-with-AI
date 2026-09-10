@@ -575,6 +575,12 @@ resource "aws_apigatewayv2_route" "analyze" {
   target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
 }
 
+resource "aws_apigatewayv2_route" "import_qr" {
+  api_id    = aws_apigatewayv2_api.http.id
+  route_key = "POST /import-qr"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+}
+
 resource "aws_apigatewayv2_route" "list_items" {
   api_id    = aws_apigatewayv2_api.http.id
   route_key = "GET /items"

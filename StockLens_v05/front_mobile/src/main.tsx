@@ -225,7 +225,26 @@ function App() {
 
   const openItemFromQrPayload = async (qrPayload: string) => {
     const itemId = itemIdFromQr(qrPayload);
-    if (!itemId) throw new Error("El QR no contiene un ID de StockLens v05.");
+    if (!itemId) {
+      if (!apiBaseUrl) throw new Error("Para importar un QR externo necesitás abrir la app conectada a AWS.");
+      setScanMessage("QR externo detectado. Leyendo la ficha vinculada...");
+      const result = await fetch(`${apiBaseUrl}/import-qr`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ qrPayload })
+      });
+      const payload = await result.json();
+      if (!result.ok) throw new Error(payload.message ?? "No se pudo importar la información del QR.");
+      const suggestion = payload.suggestion as AiSuggestion;
+      setDraft(applyAiSuggestion({ ...emptyDraft, category: "Objeto", location: "" }, suggestion));
+      setAnalysisState("ready");
+      setAnalysisMessage("Datos importados desde el QR. Revisalos y editá la ficha antes de guardarla.");
+      setScanState("idle");
+      setScanMessage("Ficha externa importada. Completá o corregí los datos antes de guardar.");
+      setDetailOpen(false);
+      setMode("capture");
+      return;
+    }
 
     if (!apiBaseUrl) {
       const localItem = items.find((item) => item.id === itemId);
@@ -275,7 +294,7 @@ function App() {
       if (scanBusyRef.current) return;
       scanBusyRef.current = true;
       try {
-        setScanMessage("QR detectado. Buscando ficha...");
+        setScanMessage("QR detectado. Buscando ficha o importando datos...");
         await openItemFromQrPayload(code.data);
         stopScanner();
       } catch (error) {
@@ -329,7 +348,7 @@ function App() {
         await video.play();
         if (cancelled) return;
         setScanState("loading");
-        setScanMessage("Camara activa. Apunta al QR para abrir la ficha.");
+        setScanMessage("Cámara activa. Apuntá al QR para abrir una ficha o importar datos.");
         scanBusyRef.current = false;
         frameRef.current = window.requestAnimationFrame(readVideoFrame);
       } catch {
@@ -622,7 +641,7 @@ function App() {
             <div>
               <span className="section-kicker">Encontrar</span>
               <h2>Leé una etiqueta QR</h2>
-              <p>Apuntá la cámara al código para abrir la ficha y ver dónde está guardado.</p>
+              <p>Leé una etiqueta StockLens para abrirla o un QR externo para importar sus datos en una ficha editable.</p>
             </div>
           </div>
 

@@ -46,9 +46,9 @@ export function normalizeSuggestion(parsed) {
   return {
     name: String(parsed.name ?? "Objeto sin identificar").slice(0, 80),
     category: String(parsed.category ?? "Objeto").slice(0, 40),
-    description: String(parsed.description ?? "").slice(0, 400),
-    condition: String(parsed.condition ?? "Para revisar").slice(0, 80),
-    qrLabel: String(parsed.qrLabel ?? "Etiqueta QR pendiente").slice(0, 80),
+    description: String(parsed.description ?? "").slice(0, 900),
+    condition: String(parsed.condition ?? "Para revisar").slice(0, 180),
+    qrLabel: String(parsed.qrLabel ?? "Etiqueta QR pendiente").slice(0, 180),
     locationHint: String(parsed.locationHint ?? "Galpon / caja").slice(0, 80),
     tags,
     checklist: checklist.length ? checklist : ["Foto principal", "Estado visible", "Descripcion revisada"]
