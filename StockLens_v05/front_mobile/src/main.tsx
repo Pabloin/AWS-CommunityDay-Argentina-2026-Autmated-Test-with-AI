@@ -888,6 +888,8 @@ function App() {
                 </div>
               </div>
 
+              <QrPanel item={selected} />
+
               <div className="detail-section-title">
                 <strong>Estado del objeto</strong>
                 <span className={`status-dot ${selected.status}`}>{statusLabels[selected.status]}</span>
@@ -925,7 +927,6 @@ function App() {
                 ))}
               </div>
 
-              <QrPanel item={selected} />
             </section>
           </section>
         ) : null

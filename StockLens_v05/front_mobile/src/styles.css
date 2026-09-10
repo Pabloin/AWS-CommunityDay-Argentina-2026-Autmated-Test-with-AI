@@ -1258,6 +1258,14 @@ textarea:focus {
   color: #fff;
 }
 
+.detail-panel > .qr-card {
+  grid-template-columns: 116px minmax(0, 1fr);
+  min-height: 178px;
+  margin-top: 20px;
+  border: 1px solid rgba(249, 181, 89, 0.28);
+  box-shadow: 0 14px 28px rgba(12, 33, 26, 0.17);
+}
+
 .qr-card-heading {
   display: flex;
   grid-column: 1 / -1;
@@ -1298,6 +1306,11 @@ textarea:focus {
   border: 4px solid #fff;
   border-radius: 12px;
   background: #fff;
+}
+
+.detail-panel > .qr-card > img,
+.detail-panel > .qr-card > .qr-empty {
+  width: 116px;
 }
 
 .qr-code-id {
