@@ -117,5 +117,30 @@ jobs:
 
       - name: Invalidate staging CloudFront
         run: |
-          aws cloudfront create-invalidation --distribution-id "${{ steps.resources.outputs.mobile_distribution_id }}" --paths "/*"
-          aws cloudfront create-invalidation --distribution-id "${{ steps.resources.outputs.admin_distribution_id }}" --paths "/*"
+          mobile_invalidation_id="$(aws cloudfront create-invalidation --distribution-id "${{ steps.resources.outputs.mobile_distribution_id }}" --paths "/*" --query 'Invalidation.Id' --output text)"
+          admin_invalidation_id="$(aws cloudfront create-invalidation --distribution-id "${{ steps.resources.outputs.admin_distribution_id }}" --paths "/*" --query 'Invalidation.Id' --output text)"
+          aws cloudfront wait invalidation-completed --distribution-id "${{ steps.resources.outputs.mobile_distribution_id }}" --id "$mobile_invalidation_id"
+          aws cloudfront wait invalidation-completed --distribution-id "${{ steps.resources.outputs.admin_distribution_id }}" --id "$admin_invalidation_id"
+
+      - name: Install Playwright for Layer 04
+        run: |
+          npm ci --prefix testing/layer-04-e2e-playwright
+          npx --prefix testing/layer-04-e2e-playwright playwright install --with-deps chromium
+
+      - name: Run Layer 04 Playwright E2E against staging
+        env:
+          MOBILE_BASE_URL: https://${{ env.MOBILE_DOMAIN_NAME }}
+          WEB_BASE_URL: https://${{ env.ADMIN_DOMAIN_NAME }}
+          API_BASE_URL: ${{ steps.resources.outputs.api_endpoint }}
+        run: ./testing/layer-04-e2e-playwright/run.sh
+
+      - name: Publish Layer 04 Playwright evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: stocklens-v05-staging-layer-04-playwright-${{ github.run_id }}
+          path: |
+            StockLens_v05/testing/layer-04-e2e-playwright/playwright-report
+            StockLens_v05/testing/layer-04-e2e-playwright/test-results
+          if-no-files-found: warn
+          retention-days: 14
