@@ -84,6 +84,8 @@ push
      -> Layer 02
      -> deploy staging
      -> Layer 03
+     -> invalidar y esperar CloudFront
+     -> Layer 04 Playwright E2E + evidencia
   -> StockLens v05 Application
      -> promocion a produccion
 ```
@@ -126,6 +128,11 @@ arn:aws:iam::442809140287:role/stocklens-v05-staging-github-actions-app-role
 Layer 3 crea un objeto temporal, persiste metadata y foto, vuelve a leerlos,
 genera el QR y elimina ambos recursos. Si alguna assertion falla, el workflow
 de staging falla y no dispara la aplicacion de produccion.
+
+Layer 4 crea objetos temporales mediante la API y verifica recorridos reales en
+Mobile y Web con Chromium. El workflow conserva video, trace, screenshots,
+reporte HTML y JUnit como artifact durante 14 dias. La camara fisica queda fuera
+de CI y requiere una prueba de dispositivo real.
 
 ## Regla de migracion
 

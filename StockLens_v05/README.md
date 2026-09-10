@@ -168,6 +168,16 @@ reporte JUnit:
 StockLens_v05/testing/layer-03-api-integration
 ```
 
+Luego del deploy de staging y de esperar las invalidaciones CloudFront, Layer 4
+ejecuta los recorridos completos Mobile y Web. La promocion se bloquea si falla:
+
+```text
+StockLens_v05/testing/layer-04-e2e-playwright
+```
+
+El artifact del workflow incluye videos WebM, traces, screenshots, reporte HTML
+y JUnit durante 14 dias.
+
 Secrets:
 
 ```text

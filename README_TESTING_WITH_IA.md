@@ -185,16 +185,18 @@ Capas implementadas y ejecutables:
   sin navegador ni AWS.
 - `StockLens_v05/testing/layer-03-api-integration`: contratos HTTP reales sobre
   API Gateway, Lambda, DynamoDB, S3 y QR; Bedrock queda como opcion explicita.
+- `StockLens_v05/testing/layer-04-e2e-playwright`: recorridos Mobile y Web sobre
+  staging con Chromium, video, trace, screenshots, HTML y JUnit.
 
 ## Brecha actual
 
-Hoy la demo ya muestra el concepto IA + Playwright + evidencia y StockLens v05
-tiene una base unitaria deterministica. Para completar la historia de calidad
-por capas, conviene agregar:
+StockLens v05 ya recorre las primeras cuatro capas y usa Layer 4 como gate antes
+de promocionar la aplicacion a produccion. Las siguientes mejoras posibles son:
 
 - tests de componentes React;
 - una tabla o stack efimero de integracion para separar completamente los datos;
-- un reporte consolidado que muestre que cada capa paso o fallo.
+- un reporte consolidado que muestre que cada capa paso o fallo;
+- pruebas en dispositivos reales para permisos, camara y lectura QR en vivo.
 
 ## Mensaje para la charla
 
