@@ -14,6 +14,10 @@ export function pathParts(event) {
   return (event.rawPath ?? event.path ?? "/").split("/").filter(Boolean);
 }
 
+export function isLayer3TestItemId(itemId) {
+  return /^TEST-L3-[A-Z0-9-]{6,80}$/i.test(String(itemId ?? ""));
+}
+
 export function parseDataUrl(dataUrl) {
   const match = /^data:image\/(png|jpe?g|webp);base64,(.+)$/i.exec(dataUrl ?? "");
   if (!match) throw new Error("La imagen debe llegar como data URL png, jpeg o webp.");

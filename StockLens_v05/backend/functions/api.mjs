@@ -1,13 +1,14 @@
 import { randomUUID } from "node:crypto";
 import { BedrockRuntimeClient, ConverseCommand } from "@aws-sdk/client-bedrock-runtime";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
-import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { DeleteCommand, DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import QRCode from "qrcode";
 import { fallbackExternalSuggestion, fetchExternalQrRecord } from "./external-qr.mjs";
 import {
   extractText,
+  isLayer3TestItemId,
   normalizeItem,
   normalizeSuggestion,
   parseBody,
@@ -29,7 +30,7 @@ const publicAppUrl = process.env.PUBLIC_APP_URL ?? "https://mobile-v5.lens.glaci
 
 const corsHeaders = {
   "access-control-allow-origin": "*",
-  "access-control-allow-methods": "GET,POST,OPTIONS",
+  "access-control-allow-methods": "GET,POST,DELETE,OPTIONS",
   "access-control-allow-headers": "content-type",
   "content-type": "application/json"
 };
@@ -57,6 +58,12 @@ function textResponse(statusCode, contentType, body) {
     },
     body
   };
+}
+
+function completeSentence(value, limit) {
+  const clipped = String(value ?? "").slice(0, limit).trim();
+  const end = Math.max(clipped.lastIndexOf("."), clipped.lastIndexOf("!"), clipped.lastIndexOf("?"));
+  return end >= Math.floor(limit * 0.45) ? clipped.slice(0, end + 1) : clipped;
 }
 
 async function analyzeImage(dataUrl) {
@@ -139,6 +146,8 @@ ${facts}`;
     }));
     const suggestion = normalizeSuggestion(parseJson(extractText(result.output)));
     suggestion.description = `${suggestion.description}\nFuente: ${record.sourceUrl}`.slice(0, 900);
+    suggestion.condition = completeSentence(suggestion.condition, 180);
+    suggestion.qrLabel = "QR externo importado";
     return { suggestion, sourceUrl: record.sourceUrl };
   } catch (error) {
     console.warn("No se pudo interpretar el QR externo con Bedrock; se usa extracción directa.", error);
@@ -250,6 +259,27 @@ async function handleGetItemQr(itemId) {
   return textResponse(200, "image/svg+xml", svg);
 }
 
+async function handleDeleteTestItem(itemId) {
+  if (!isLayer3TestItemId(itemId)) {
+    return response(403, { error: "test_item_required" });
+  }
+
+  const key = {
+    pk: `TENANT#${defaultTenantId}`,
+    sk: `ITEM#${itemId}`
+  };
+  const result = await dynamodb.send(new GetCommand({ TableName: tableName, Key: key }));
+  if (!result.Item) return response(404, { error: "item_not_found" });
+
+  await Promise.all(
+    (result.Item.photoKeys ?? []).map((photo) =>
+      s3.send(new DeleteObjectCommand({ Bucket: photosBucket, Key: photo.key }))
+    )
+  );
+  await dynamodb.send(new DeleteCommand({ TableName: tableName, Key: key }));
+  return response(200, { deleted: true, id: itemId });
+}
+
 async function uploadPhotos(itemId, photos) {
   const nextPhotos = [];
   for (const dataUrl of (photos ?? []).slice(0, 4)) {
@@ -342,6 +372,10 @@ export async function handler(event) {
 
     if (method === "GET" && parts[0] === "items" && parts[1] && parts[2] === "qr") {
       return handleGetItemQr(parts[1]);
+    }
+
+    if (method === "DELETE" && parts[0] === "test-support" && parts[1] === "items" && parts[2]) {
+      return handleDeleteTestItem(parts[2]);
     }
 
     if (method === "GET" && parts[0] === "items" && parts[1]) {
