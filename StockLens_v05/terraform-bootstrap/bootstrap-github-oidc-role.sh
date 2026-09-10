@@ -4,8 +4,8 @@ set -euo pipefail
 usage() {
   cat <<'USAGE'
 Usage:
-  StockLens_v05/scripts/bootstrap-github-oidc-role.sh create
-  StockLens_v05/scripts/bootstrap-github-oidc-role.sh destroy
+  StockLens_v05/terraform-bootstrap/bootstrap-github-oidc-role.sh create
+  StockLens_v05/terraform-bootstrap/bootstrap-github-oidc-role.sh destroy
 
 Environment variables:
   AWS_PROFILE       Optional AWS CLI profile.

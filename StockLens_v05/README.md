@@ -178,7 +178,7 @@ STOCKLENS_V05_APP_ROLE_ARN
 En una cuenta nueva existe un unico paso administrativo de bootstrap:
 
 ```bash
-AWS_PROFILE=sebas StockLens_v05/scripts/bootstrap-github-oidc-role.sh create
+AWS_PROFILE=sebas StockLens_v05/terraform-bootstrap/bootstrap-github-oidc-role.sh create
 ```
 
 El script no ejecuta Terraform. Crea el provider OIDC si falta y un rol temporal,
@@ -196,7 +196,7 @@ Esos valores deben cargarse como secrets v5 para que la operacion quede separada
 de otras versiones. Finalmente se elimina el rol temporal:
 
 ```bash
-AWS_PROFILE=sebas StockLens_v05/scripts/bootstrap-github-oidc-role.sh destroy
+AWS_PROFILE=sebas StockLens_v05/terraform-bootstrap/bootstrap-github-oidc-role.sh destroy
 ```
 
 El provider OIDC no se elimina porque es compartido por los pipelines de la

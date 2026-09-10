@@ -57,7 +57,7 @@ jobs:
           ROLE_ARN: ${{ secrets.STOCKLENS_V05_INFRA_ROLE_ARN }}
         run: |
           if [ -z "$ROLE_ARN" ]; then
-            echo "::error title=Missing secret::Configure STOCKLENS_V05_INFRA_ROLE_ARN. For a new account, create the temporary role with StockLens_v05/scripts/bootstrap-github-oidc-role.sh."
+            echo "::error title=Missing secret::Configure STOCKLENS_V05_INFRA_ROLE_ARN. For a new account, create the temporary role with StockLens_v05/terraform-bootstrap/bootstrap-github-oidc-role.sh."
             exit 1
           fi
 

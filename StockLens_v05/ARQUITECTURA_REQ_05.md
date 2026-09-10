@@ -99,7 +99,7 @@ Workflows:
 
 Existe una dependencia inevitable en una cuenta vacia: GitHub Actions necesita
 un rol AWS para ejecutar Terraform, pero ese rol todavia no puede ser creado por
-Terraform. `StockLens_v05/scripts/bootstrap-github-oidc-role.sh create` resuelve
+Terraform. `StockLens_v05/terraform-bootstrap/bootstrap-github-oidc-role.sh create` resuelve
 una sola vez esa confianza inicial creando el provider OIDC si falta y el rol
 temporal `stocklens-v05-github-infra-bootstrap-role`.
 
