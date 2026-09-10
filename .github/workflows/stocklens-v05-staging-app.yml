@@ -101,6 +101,7 @@ jobs:
       - name: Run Layer 03 against staging
         env:
           API_BASE_URL: ${{ steps.resources.outputs.api_endpoint }}
+          TEST_ORIGIN: https://${{ env.MOBILE_DOMAIN_NAME }}
           RUN_BEDROCK_TEST: ${{ inputs.run_bedrock_integration || 'false' }}
           REPORT_DIR: ${{ runner.temp }}/stocklens-v05-staging-layer-03
         run: ./testing/layer-03-api-integration/run.sh

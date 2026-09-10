@@ -4,6 +4,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const baseUrl = (process.env.API_BASE_URL ?? "").replace(/\/$/, "");
+const testOrigin = process.env.TEST_ORIGIN ?? "https://mobile-v5.lens.glaciar.org";
 const reportFile = process.env.JUNIT_REPORT_FILE ?? "/tmp/stocklens-v05-layer-03/core.xml";
 const runBedrock = process.env.RUN_BEDROCK_TEST === "true";
 const testItemId = `TEST-L3-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`.toUpperCase();
@@ -87,7 +88,7 @@ await step("CORS preflight", async () => {
   const response = await request("/items", {
     method: "OPTIONS",
     headers: {
-      origin: "https://mobile-v5.lens.glaciar.org",
+      origin: testOrigin,
       "access-control-request-method": "GET"
     }
   });
