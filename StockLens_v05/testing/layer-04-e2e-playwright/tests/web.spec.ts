@@ -24,6 +24,6 @@ test("Web encuentra el objeto y enlaza su ficha Mobile", async ({ page, request 
     const mobileLink = page.getByRole("link", { name: /Abrir ficha móvil/ });
     await expect(mobileLink).toHaveAttribute("href", new RegExp(`item=${item.id}`));
   } finally {
-    await removeItem(request, item.id);
+    await removeItem(item.id);
   }
 });

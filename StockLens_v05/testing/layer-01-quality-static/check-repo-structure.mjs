@@ -10,6 +10,7 @@ const requiredPaths = [
   "StockLens_v05/front_web/config.js",
   "StockLens_v05/backend/functions/api.mjs",
   "StockLens_v05/testing/layer-04-e2e-playwright/playwright.config.ts",
+  "StockLens_v05/testing/layer-04-e2e-playwright/global-teardown.ts",
   "StockLens_v05/testing/layer-04-e2e-playwright/tests/mobile.spec.ts",
   "StockLens_v05/testing/layer-04-e2e-playwright/tests/web.spec.ts",
   "StockLens_v05/terraform/modules/stocklens/main.tf",

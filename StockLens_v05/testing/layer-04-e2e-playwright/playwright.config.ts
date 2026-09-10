@@ -9,6 +9,7 @@ if (!mobileUrl || !webUrl || !process.env.API_BASE_URL) {
 
 export default defineConfig({
   testDir: "./tests",
+  globalTeardown: "./global-teardown.ts",
   outputDir: "./test-results",
   timeout: 45_000,
   expect: { timeout: 15_000 },
@@ -29,7 +30,7 @@ export default defineConfig({
       name: "mobile-chromium",
       testMatch: "mobile.spec.ts",
       use: {
-        ...devices["iPhone 13"],
+        ...devices["Pixel 7"],
         baseURL: mobileUrl
       }
     },

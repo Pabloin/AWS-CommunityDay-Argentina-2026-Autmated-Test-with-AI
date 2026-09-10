@@ -22,6 +22,6 @@ test("Mobile abre una ficha vinculada y genera su etiqueta QR", async ({ page, r
     await page.getByPlaceholder("Buscar objeto o ubicación").fill(item.name);
     await expect(page.locator(".item-list")).toContainText(item.name);
   } finally {
-    await removeItem(request, item.id);
+    await removeItem(item.id);
   }
 });

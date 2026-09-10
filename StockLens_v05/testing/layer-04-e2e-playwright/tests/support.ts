@@ -23,7 +23,9 @@ export async function seedItem(request: APIRequestContext, item: ReturnType<type
   expect(response.status(), await response.text()).toBe(201);
 }
 
-export async function removeItem(request: APIRequestContext, itemId: string) {
-  const response = await request.delete(`${apiBaseUrl}/test-support/items/${encodeURIComponent(itemId)}`);
-  expect([200, 404]).toContain(response.status());
+export async function removeItem(itemId: string) {
+  const response = await fetch(`${apiBaseUrl}/test-support/items/${encodeURIComponent(itemId)}`, {
+    method: "DELETE"
+  });
+  expect([200, 404]).toContain(response.status);
 }
