@@ -63,7 +63,7 @@ Dominio propuesto:
 
 ```text
 https://mobile-v5.lens.glaciar.org
-https://admin-v5.lens.glaciar.org
+https://web-v5.lens.glaciar.org
 ```
 
 La infraestructura vive en:
@@ -96,7 +96,7 @@ incluyendo fotos, QR, tags, checklist y estado de organizacion.
 Recursos principales:
 
 - S3 + CloudFront para `mobile-v5`.
-- S3 + CloudFront para `admin-v5`.
+- S3 + CloudFront para `web-v5`.
 - API Gateway HTTP API.
 - Lambda Node.js.
 - DynamoDB `stocklens-v05-items`.

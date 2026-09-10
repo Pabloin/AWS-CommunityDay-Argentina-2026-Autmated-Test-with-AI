@@ -87,9 +87,9 @@ variable "mobile_domain_name" {
 }
 
 variable "admin_domain_name" {
-  description = "Public DNS name for the StockLens v05 admin app."
+  description = "Public DNS name for the StockLens v05 web app."
   type        = string
-  default     = "admin-v5.lens.glaciar.org"
+  default     = "web-v5.lens.glaciar.org"
 }
 
 variable "bedrock_model_id" {

@@ -21,7 +21,7 @@ env:
   AWS_REGION: us-east-1
   PROJECT_NAME: stocklens-v05
   MOBILE_DOMAIN_NAME: mobile-v5.lens.glaciar.org
-  ADMIN_DOMAIN_NAME: admin-v5.lens.glaciar.org
+  ADMIN_DOMAIN_NAME: web-v5.lens.glaciar.org
 
 jobs:
   build-and-deploy:
