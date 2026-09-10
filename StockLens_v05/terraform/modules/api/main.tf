@@ -12,15 +12,15 @@ data "aws_iam_policy_document" "lambda_assume_role" {
 resource "aws_iam_role" "lambda" {
   name               = "${var.project_name}-lambda-role"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
-  tags = merge(var.tags, {
+  tags               = merge(var.tags, {
     Component = "backend"
     Purpose   = "image-analysis-api"
   })
 }
 
 resource "aws_iam_role_policy" "lambda" {
-  name = "${var.project_name}-lambda-policy"
-  role = aws_iam_role.lambda.id
+  name   = "${var.project_name}-lambda-policy"
+  role   = aws_iam_role.lambda.id
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -129,7 +129,7 @@ resource "aws_apigatewayv2_stage" "default" {
   api_id      = aws_apigatewayv2_api.http.id
   name        = "$default"
   auto_deploy = true
-  tags = merge(var.tags, {
+  tags        = merge(var.tags, {
     Component = "backend"
     Purpose   = "image-analysis-api"
   })
