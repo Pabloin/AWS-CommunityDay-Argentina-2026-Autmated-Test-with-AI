@@ -14,6 +14,7 @@ const modelId = process.env.BEDROCK_MODEL_ID ?? "us.anthropic.claude-haiku-4-5-2
 const tableName = process.env.ITEMS_TABLE;
 const photosBucket = process.env.PHOTOS_BUCKET;
 const defaultTenantId = process.env.DEFAULT_TENANT_ID ?? "aws-cday-argentina-2026-v5";
+const publicAppUrl = process.env.PUBLIC_APP_URL ?? "https://mobile-v5.lens.glaciar.org";
 
 const corsHeaders = {
   "access-control-allow-origin": "*",
@@ -23,6 +24,12 @@ const corsHeaders = {
 };
 
 const now = () => new Date().toISOString();
+
+function publicItemUrl(itemId) {
+  const url = new URL(publicAppUrl);
+  url.searchParams.set("item", itemId);
+  return url.toString();
+}
 
 function response(statusCode, body) {
   return {
@@ -192,7 +199,7 @@ function itemToResponse(item) {
     createdAt: item.createdAt,
     updatedAt: item.updatedAt,
     photoCount: (item.photoKeys ?? []).length,
-    qrPayload: JSON.stringify({ app: "StockLens-v05", id: item.itemId }),
+    qrPayload: publicItemUrl(item.itemId),
     qrUrl: `/items/${encodeURIComponent(item.itemId)}/qr`
   };
 }
@@ -251,7 +258,7 @@ async function handleGetItemQr(itemId) {
 
   if (!result.Item) return response(404, { error: "item_not_found" });
 
-  const svg = await QRCode.toString(JSON.stringify({ app: "StockLens-v05", id: itemId }), {
+  const svg = await QRCode.toString(publicItemUrl(itemId), {
     type: "svg",
     margin: 1,
     width: 240,

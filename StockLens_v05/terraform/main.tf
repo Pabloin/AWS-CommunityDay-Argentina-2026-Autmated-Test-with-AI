@@ -523,6 +523,7 @@ resource "aws_lambda_function" "api" {
       DEFAULT_TENANT_ID = var.default_tenant_id
       ITEMS_TABLE       = aws_dynamodb_table.items.name
       PHOTOS_BUCKET     = aws_s3_bucket.photos.bucket
+      PUBLIC_APP_URL    = "https://${var.mobile_domain_name}"
     }
   }
 
@@ -543,7 +544,9 @@ resource "aws_apigatewayv2_api" "http" {
       "https://${var.mobile_domain_name}",
       "https://${var.admin_domain_name}",
       "http://127.0.0.1:5190",
-      "http://127.0.0.1:5290"
+      "http://127.0.0.1:5290",
+      "http://127.0.0.1:5192",
+      "http://localhost:5192"
     ]
   }
 

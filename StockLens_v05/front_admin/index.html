@@ -3,38 +3,50 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>StockLens v05 Admin</title>
+    <title>StockLens · Admin</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <main class="shell">
       <header class="topbar">
-        <div>
-          <span>StockLens v05</span>
-          <h1>Catalogo cloud</h1>
+        <a class="brand" href="./" aria-label="StockLens Admin">
+          <span class="brand-mark">SL</span>
+          <span><strong>StockLens</strong><small>ADMIN · INVENTARIO</small></span>
+        </a>
+        <div class="topbar-actions">
+          <span class="sync-state"><i></i> Catálogo cloud</span>
+          <button id="refresh" type="button">Actualizar</button>
         </div>
-        <button id="refresh" type="button">Actualizar</button>
       </header>
 
-      <section class="summary" aria-label="Resumen">
-        <article>
-          <strong id="total">0</strong>
-          <span>objetos</span>
-        </article>
-        <article>
-          <strong id="photos">0</strong>
-          <span>fotos</span>
-        </article>
-        <article>
-          <strong id="ready">0</strong>
-          <span>con QR</span>
-        </article>
+      <section class="hero" aria-label="Resumen del inventario">
+        <div class="hero-copy">
+          <span>Centro de control</span>
+          <h1>Todo lo que guardaste,<br />a la vista.</h1>
+          <p>Revisá el inventario, abrí cada ficha y compartí su QR desde un solo lugar.</p>
+        </div>
+        <div class="summary">
+          <article><strong id="total">0</strong><span>objetos</span></article>
+          <article><strong id="photos">0</strong><span>fotos</span></article>
+          <article><strong id="ready">0</strong><span>con QR</span></article>
+        </div>
       </section>
 
-      <section class="toolbar">
-        <input id="search" placeholder="Buscar por nombre, categoria, ubicacion o tag" />
-        <select id="status">
-          <option value="">Todos</option>
+      <section class="catalog-header">
+        <div>
+          <span>Inventario</span>
+          <h2>Objetos catalogados</h2>
+        </div>
+        <p id="result-count">Cargando objetos…</p>
+      </section>
+
+      <section class="toolbar" aria-label="Filtrar inventario">
+        <label class="search-field">
+          <span aria-hidden="true">⌕</span>
+          <input id="search" placeholder="Buscar por nombre, ubicación o categoría" />
+        </label>
+        <select id="status" aria-label="Filtrar por estado">
+          <option value="">Todos los estados</option>
           <option value="review">Para revisar</option>
           <option value="identified">Identificado</option>
           <option value="labeled">Con QR</option>
@@ -43,8 +55,12 @@
         </select>
       </section>
 
-      <section id="message" class="message">Cargando catalogo...</section>
-      <section id="grid" class="grid" aria-label="Objetos catalogados"></section>
+      <section id="message" class="message">Cargando catálogo cloud…</section>
+
+      <section class="workspace" aria-label="Catálogo y ficha de objeto">
+        <section id="grid" class="grid" aria-label="Objetos catalogados"></section>
+        <aside id="detail" class="detail" aria-live="polite"></aside>
+      </section>
     </main>
 
     <script src="./config.js"></script>

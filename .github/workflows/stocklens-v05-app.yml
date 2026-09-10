@@ -102,7 +102,7 @@ jobs:
       - name: Deploy admin app
         run: |
           api_endpoint="$(aws apigatewayv2 get-apis --query "Items[?Name=='${PROJECT_NAME}-http-api'].ApiEndpoint | [0]" --output text)"
-          printf 'window.STOCKLENS_API_BASE_URL = "%s";\n' "$api_endpoint" > front_admin/config.js
+          printf 'window.STOCKLENS_API_BASE_URL = "%s";\nwindow.STOCKLENS_MOBILE_APP_URL = "https://%s";\n' "$api_endpoint" "$MOBILE_DOMAIN_NAME" > front_admin/config.js
           aws s3 sync front_admin "s3://${{ steps.resources.outputs.admin_bucket }}" --delete
 
       - name: Deploy API Lambda
