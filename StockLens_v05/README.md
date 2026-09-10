@@ -72,10 +72,15 @@ La infraestructura vive en:
 StockLens_v05/terraform
 ```
 
-La implementacion AWS esta modularizada:
+La implementacion AWS esta separada por componentes de arquitectura:
 
 ```text
-StockLens_v05/terraform/modules/stocklens
+StockLens_v05/terraform/modules/
+  apps/       S3 de frontends, CloudFront, ACM y Route53
+  storage/    DynamoDB y S3 de fotos
+  api/        Lambda, IAM de ejecucion y API Gateway
+  cicd/       GitHub OIDC y roles de los pipelines
+  stocklens/  composicion de los cuatro modulos
 ```
 
 Produccion conserva el root y state actuales. Staging tiene un root separado en

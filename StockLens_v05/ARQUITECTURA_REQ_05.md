@@ -24,7 +24,12 @@ StockLens_v05/terraform/
   main.tf                         root de produccion
   moved.tf                       migracion de state sin recreacion
   backend.hcl.example             state de produccion
-  modules/stocklens/              implementacion reutilizable
+  modules/
+    apps/                         frontends, DNS y CDN
+    storage/                      DynamoDB y almacenamiento de fotos
+    api/                          Lambda y contrato HTTP
+    cicd/                         OIDC y roles de despliegue
+    stocklens/                    composicion reutilizable
   environments/staging/           root y backend de staging
 ```
 
@@ -40,10 +45,11 @@ Staging utiliza:
 s3://stocklens-terraform-state-442809140287/stocklens/v05/staging/terraform.tfstate
 ```
 
-Los bloques `moved` trasladan las direcciones de produccion desde
-`aws_*` hacia `module.stocklens.aws_*`. El primer plan modularizado debe mostrar
-cero destrucciones. Si propone reemplazar CloudFront, DynamoDB, S3, ACM o
-Route53, no debe aplicarse.
+Los bloques `moved` encadenan las direcciones historicas de produccion con los
+modulos arquitectonicos y migran staging desde `module.stocklens.aws_*` hacia
+`module.stocklens.module.<componente>.aws_*`. El plan debe mostrar cero
+destrucciones. Si propone reemplazar CloudFront, DynamoDB, S3, ACM o Route53,
+no debe aplicarse.
 
 ## Ambientes
 
