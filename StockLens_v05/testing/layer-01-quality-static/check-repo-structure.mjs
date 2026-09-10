@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
-const repoRoot = new URL("..", import.meta.url).pathname;
+const repoRoot = new URL("../../..", import.meta.url).pathname;
 
 const requiredPaths = [
   "StockLens_v05/front_mobile/package.json",
@@ -49,4 +49,3 @@ if (missingWorkflowReferences.length) {
 }
 
 console.log("Repo structure check passed.");
-

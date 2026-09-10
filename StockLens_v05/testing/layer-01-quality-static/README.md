@@ -78,7 +78,7 @@ Valida:
 ### 4. Estructura de repo
 
 ```bash
-node layer-01-quality-static-tests/check-repo-structure.mjs
+node StockLens_v05/testing/layer-01-quality-static/check-repo-structure.mjs
 ```
 
 Valida rutas esperadas por el pipeline, por ejemplo:
@@ -93,7 +93,7 @@ Tambien detecta referencias viejas a `front_admin` en el workflow v05.
 ## Ejecutar todo
 
 ```bash
-./layer-01-quality-static-tests/run.sh
+./StockLens_v05/testing/layer-01-quality-static/run.sh
 ```
 
 ## Mensaje para la charla
@@ -107,4 +107,3 @@ Despues despliego.
 ```
 
 Esta capa no reemplaza Playwright ni Postman. Les prepara el terreno.
-
