@@ -63,7 +63,7 @@ Dominio propuesto:
 
 ```text
 https://mobile-v5.lens.glaciar.org
-https://admin-v5.lens.glaciar.org
+https://web-v5.lens.glaciar.org
 ```
 
 La infraestructura vive en:
@@ -96,7 +96,7 @@ incluyendo fotos, QR, tags, checklist y estado de organizacion.
 Recursos principales:
 
 - S3 + CloudFront para `mobile-v5`.
-- S3 + CloudFront para `admin-v5`.
+- S3 + CloudFront para `web-v5`.
 - API Gateway HTTP API.
 - Lambda Node.js.
 - DynamoDB `stocklens-v05-items`.
@@ -146,7 +146,7 @@ de v4.
 El workflow de infraestructura corre plan/apply desde GitHub Actions. El workflow
 de aplicacion corre por cambios de frontend/backend y tambien despues de un
 apply exitoso de infraestructura. Resuelve el HTTP API creado por Terraform,
-inyecta `VITE_API_BASE_URL` en el build mobile, genera `front_admin/config.js`,
+inyecta `VITE_API_BASE_URL` en el build mobile, genera `front_web/config.js`,
 sube ambos frontends a S3, actualiza la Lambda backend e invalida CloudFront.
 
 ## CloudFront

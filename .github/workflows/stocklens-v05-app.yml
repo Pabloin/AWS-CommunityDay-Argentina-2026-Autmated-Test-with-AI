@@ -9,7 +9,7 @@ on:
     branches: [master]
     paths:
       - "StockLens_v05/front_mobile/**"
-      - "StockLens_v05/front_admin/**"
+      - "StockLens_v05/front_web/**"
       - "StockLens_v05/backend/**"
       - ".github/workflows/stocklens-v05-app.yml"
 
@@ -21,7 +21,7 @@ env:
   AWS_REGION: us-east-1
   PROJECT_NAME: stocklens-v05
   MOBILE_DOMAIN_NAME: mobile-v5.lens.glaciar.org
-  ADMIN_DOMAIN_NAME: admin-v5.lens.glaciar.org
+  ADMIN_DOMAIN_NAME: web-v5.lens.glaciar.org
 
 jobs:
   build-and-deploy:
@@ -99,11 +99,11 @@ jobs:
       - name: Deploy mobile app
         run: aws s3 sync front_mobile/dist "s3://${{ steps.resources.outputs.mobile_bucket }}" --delete
 
-      - name: Deploy admin app
+      - name: Deploy web app
         run: |
           api_endpoint="$(aws apigatewayv2 get-apis --query "Items[?Name=='${PROJECT_NAME}-http-api'].ApiEndpoint | [0]" --output text)"
-          printf 'window.STOCKLENS_API_BASE_URL = "%s";\nwindow.STOCKLENS_MOBILE_APP_URL = "https://%s";\n' "$api_endpoint" "$MOBILE_DOMAIN_NAME" > front_admin/config.js
-          aws s3 sync front_admin "s3://${{ steps.resources.outputs.admin_bucket }}" --delete
+          printf 'window.STOCKLENS_API_BASE_URL = "%s";\nwindow.STOCKLENS_MOBILE_APP_URL = "https://%s";\n' "$api_endpoint" "$MOBILE_DOMAIN_NAME" > front_web/config.js
+          aws s3 sync front_web "s3://${{ steps.resources.outputs.admin_bucket }}" --delete
 
       - name: Deploy API Lambda
         run: aws lambda update-function-code --function-name "${PROJECT_NAME}-api" --zip-file fileb://backend/dist/api.zip
