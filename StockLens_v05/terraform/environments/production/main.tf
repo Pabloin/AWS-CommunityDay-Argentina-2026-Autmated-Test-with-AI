@@ -31,7 +31,7 @@ locals {
 }
 
 module "stocklens" {
-  source = "./modules/stocklens"
+  source = "../../modules/stocklens"
 
   providers = {
     aws           = aws
@@ -55,5 +55,5 @@ module "stocklens" {
   mobile_domain_name       = var.mobile_domain_name
   admin_domain_name        = var.admin_domain_name
   bedrock_model_id         = var.bedrock_model_id
-  lambda_package_path      = abspath("${path.root}/../backend/dist/api.zip")
+  lambda_package_path      = abspath("${path.root}/../../../backend/dist/api.zip")
 }

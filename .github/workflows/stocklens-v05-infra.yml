@@ -35,7 +35,7 @@ permissions:
 
 env:
   AWS_REGION: us-east-1
-  TF_WORKING_DIR: StockLens_v05/terraform
+  TF_WORKING_DIR: StockLens_v05/terraform/environments/production
   TF_VAR_github_owner: Pabloin
   TF_VAR_github_repo: AWS-CommunityDay-Argentina-2026-Autmated-Test-with-AI
   TF_VAR_repository_url: git@github-Pabloin:Pabloin/AWS-CommunityDay-Argentina-2026-Autmated-Test-with-AI.git
@@ -54,23 +54,23 @@ jobs:
 
       - name: Check AWS infra role secret
         env:
-          ROLE_ARN: ${{ secrets.STOCKLENS_V05_INFRA_ROLE_ARN || secrets.STOCKLENS_V04_INFRA_ROLE_ARN }}
+          ROLE_ARN: ${{ secrets.STOCKLENS_V05_INFRA_ROLE_ARN }}
         run: |
           if [ -z "$ROLE_ARN" ]; then
-            echo "::error title=Missing secret::Configure STOCKLENS_V05_INFRA_ROLE_ARN or reuse STOCKLENS_V04_INFRA_ROLE_ARN for the first bootstrap apply."
+            echo "::error title=Missing secret::Configure STOCKLENS_V05_INFRA_ROLE_ARN. For a new account, create the temporary role with StockLens_v05/scripts/bootstrap-github-oidc-role.sh."
             exit 1
           fi
 
       - uses: aws-actions/configure-aws-credentials@v6
         with:
-          role-to-assume: ${{ secrets.STOCKLENS_V05_INFRA_ROLE_ARN || secrets.STOCKLENS_V04_INFRA_ROLE_ARN }}
+          role-to-assume: ${{ secrets.STOCKLENS_V05_INFRA_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
           role-session-name: stocklens-v05-infra
           allowed-account-ids: "442809140287"
 
       - name: Prepare Lambda package input
         run: |
-          cd ..
+          cd ../../..
           npm ci --prefix backend
           npm --prefix backend run package
 
@@ -78,7 +78,7 @@ jobs:
         run: terraform fmt -check -diff -recursive
 
       - name: Terraform init
-        run: terraform init -backend-config=backend.hcl.example
+        run: terraform init -backend-config=backend.hcl
 
       - name: Terraform validate
         run: terraform validate

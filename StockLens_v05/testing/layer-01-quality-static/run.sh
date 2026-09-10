@@ -19,8 +19,8 @@ echo "-- terraform fmt"
 terraform -chdir=StockLens_v05/terraform fmt -check -recursive
 
 echo "-- terraform validate"
-terraform -chdir=StockLens_v05/terraform init -backend=false
-terraform -chdir=StockLens_v05/terraform validate
+terraform -chdir=StockLens_v05/terraform/environments/production init -backend=false
+terraform -chdir=StockLens_v05/terraform/environments/production validate
 terraform -chdir=StockLens_v05/terraform/environments/staging init -backend=false
 terraform -chdir=StockLens_v05/terraform/environments/staging validate
 

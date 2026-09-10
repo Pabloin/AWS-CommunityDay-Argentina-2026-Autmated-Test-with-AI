@@ -9,11 +9,13 @@ const requiredPaths = [
   "StockLens_v05/front_web/index.html",
   "StockLens_v05/front_web/config.js",
   "StockLens_v05/backend/functions/api.mjs",
-  "StockLens_v05/terraform/main.tf",
   "StockLens_v05/terraform/modules/stocklens/main.tf",
+  "StockLens_v05/terraform/environments/production/main.tf",
+  "StockLens_v05/terraform/environments/production/backend.hcl",
   "StockLens_v05/terraform/environments/staging/main.tf",
   "StockLens_v05/terraform/environments/staging/backend.hcl",
   ".github/workflows/stocklens-v05-app.yml",
+  ".github/workflows/stocklens-v05-infra.yml",
   ".github/workflows/stocklens-v05-staging-app.yml",
   ".github/workflows/stocklens-v05-staging-infra.yml"
 ];

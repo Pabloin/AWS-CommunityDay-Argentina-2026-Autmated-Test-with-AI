@@ -16,21 +16,22 @@ pueda probarse con servicios AWS reales sin afectar produccion.
 - Layer 3 debe pasar en staging antes de disparar produccion.
 - Bedrock real es una prueba opcional porque tiene costo y salida variable.
 - Ningun pipeline utiliza access keys AWS de larga duracion.
+- El bootstrap de una cuenta nueva crea solamente la confianza inicial; nunca
+  ejecuta Terraform y su rol temporal se elimina despues del primer apply.
 
 ## Estructura Terraform
 
 ```text
 StockLens_v05/terraform/
-  main.tf                         root de produccion
-  moved.tf                       migracion de state sin recreacion
-  backend.hcl.example             state de produccion
   modules/
     apps/                         frontends, DNS y CDN
     storage/                      DynamoDB y almacenamiento de fotos
     api/                          Lambda y contrato HTTP
     cicd/                         OIDC y roles de despliegue
     stocklens/                    composicion reutilizable
-  environments/staging/           root y backend de staging
+  environments/
+    production/                   root, moved blocks y backend de produccion
+    staging/                      root y backend de staging
 ```
 
 Produccion conserva el state existente:
@@ -93,6 +94,24 @@ Workflows:
 - `.github/workflows/stocklens-v05-staging-app.yml`
 - `.github/workflows/stocklens-v05-infra.yml`
 - `.github/workflows/stocklens-v05-app.yml`
+
+## Bootstrap OIDC
+
+Existe una dependencia inevitable en una cuenta vacia: GitHub Actions necesita
+un rol AWS para ejecutar Terraform, pero ese rol todavia no puede ser creado por
+Terraform. `StockLens_v05/scripts/bootstrap-github-oidc-role.sh create` resuelve
+una sola vez esa confianza inicial creando el provider OIDC si falta y el rol
+temporal `stocklens-v05-github-infra-bootstrap-role`.
+
+El rol temporal usa `AdministratorAccess`: no es minimo privilegio y su alcance
+se acepta solamente para resolver el momento cero. No debe quedar como rol
+operativo.
+
+El ARN temporal se carga en `STOCKLENS_V05_INFRA_ROLE_ARN`. Luego del primer
+apply desde GitHub, el secret se reemplaza por el output
+`github_actions_infra_role_arn` y se ejecuta el script con `destroy`. El provider
+OIDC permanece porque es un recurso compartido por repositorios y versiones.
+El workflow v5 no acepta roles v4 como fallback operativo.
 
 El rol de infraestructura de produccion crea inicialmente staging. El rol de
 aplicacion staging tiene un ARN deterministico y permisos limitados a sus
