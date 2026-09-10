@@ -2,6 +2,15 @@ name: StockLens v05 Application
 
 on:
   workflow_dispatch:
+    inputs:
+      run_bedrock_integration:
+        description: "Run the non-deterministic Bedrock integration contract"
+        required: true
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
   workflow_run:
     workflows: ["StockLens v05 Infrastructure"]
     types: [completed]
@@ -121,7 +130,26 @@ jobs:
           aws s3 sync front_web "s3://${{ steps.resources.outputs.admin_bucket }}" --delete
 
       - name: Deploy API Lambda
-        run: aws lambda update-function-code --function-name "${PROJECT_NAME}-api" --zip-file fileb://backend/dist/api.zip
+        run: |
+          aws lambda update-function-code --function-name "${PROJECT_NAME}-api" --zip-file fileb://backend/dist/api.zip
+          aws lambda wait function-updated-v2 --function-name "${PROJECT_NAME}-api"
+
+      - name: Run Layer 03 API integration
+        env:
+          RUN_BEDROCK_TEST: ${{ inputs.run_bedrock_integration || 'false' }}
+          REPORT_DIR: ${{ runner.temp }}/stocklens-v05-layer-03
+        run: |
+          api_endpoint="$(aws apigatewayv2 get-apis --query "Items[?Name=='${PROJECT_NAME}-http-api'].ApiEndpoint | [0]" --output text)"
+          API_BASE_URL="$api_endpoint" ./testing/layer-03-api-integration/run.sh
+
+      - name: Publish Layer 03 report
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: stocklens-v05-layer-03-${{ github.run_id }}
+          path: ${{ runner.temp }}/stocklens-v05-layer-03
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Invalidate mobile CloudFront
         run: aws cloudfront create-invalidation --distribution-id "${{ steps.resources.outputs.mobile_distribution_id }}" --paths "/*"

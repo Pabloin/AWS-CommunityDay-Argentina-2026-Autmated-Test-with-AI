@@ -87,6 +87,8 @@ El backend expone una API serverless:
 - `POST /items`: guarda metadata en DynamoDB y fotos en S3.
 - `GET /items/{id}`: devuelve un objeto con URLs firmadas de sus fotos.
 - `GET /items/{id}/qr`: genera el QR SVG de una ficha.
+- `DELETE /test-support/items/{id}`: limpia exclusivamente items temporales con
+  prefijo `TEST-L3-` creados por las pruebas de integracion.
 
 La vista mobile consume esa API para crear objetos desde el celular. La vista
 mobile tambien puede leer un QR existente para traer la ficha completa desde la
@@ -129,6 +131,13 @@ credenciales AWS:
 
 ```text
 StockLens_v05/testing/layer-02-unit
+```
+
+Despues del deploy de la API se ejecuta la integracion real y se publica un
+reporte JUnit:
+
+```text
+StockLens_v05/testing/layer-03-api-integration
 ```
 
 Secrets:

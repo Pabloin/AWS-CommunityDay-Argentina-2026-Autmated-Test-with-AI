@@ -490,7 +490,8 @@ resource "aws_iam_role_policy" "lambda" {
         Action = [
           "dynamodb:GetItem",
           "dynamodb:PutItem",
-          "dynamodb:Query"
+          "dynamodb:Query",
+          "dynamodb:DeleteItem"
         ]
         Resource = aws_dynamodb_table.items.arn
       },
@@ -498,7 +499,8 @@ resource "aws_iam_role_policy" "lambda" {
         Effect = "Allow"
         Action = [
           "s3:GetObject",
-          "s3:PutObject"
+          "s3:PutObject",
+          "s3:DeleteObject"
         ]
         Resource = "${aws_s3_bucket.photos.arn}/*"
       }
@@ -539,7 +541,7 @@ resource "aws_apigatewayv2_api" "http" {
 
   cors_configuration {
     allow_headers = ["content-type"]
-    allow_methods = ["GET", "POST", "OPTIONS"]
+    allow_methods = ["GET", "POST", "DELETE", "OPTIONS"]
     allow_origins = [
       "https://${var.mobile_domain_name}",
       "https://${var.admin_domain_name}",
@@ -602,6 +604,12 @@ resource "aws_apigatewayv2_route" "get_item" {
 resource "aws_apigatewayv2_route" "get_item_qr" {
   api_id    = aws_apigatewayv2_api.http.id
   route_key = "GET /items/{id}/qr"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+}
+
+resource "aws_apigatewayv2_route" "delete_test_item" {
+  api_id    = aws_apigatewayv2_api.http.id
+  route_key = "DELETE /test-support/items/{id}"
   target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
 }
 
@@ -719,6 +727,7 @@ resource "aws_iam_role_policy" "github_actions_app" {
         Effect = "Allow"
         Action = [
           "lambda:GetFunction",
+          "lambda:GetFunctionConfiguration",
           "lambda:UpdateFunctionCode"
         ]
         Resource = aws_lambda_function.api.arn

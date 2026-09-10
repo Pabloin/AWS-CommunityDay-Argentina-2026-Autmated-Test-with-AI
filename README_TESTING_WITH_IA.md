@@ -183,6 +183,8 @@ Capas implementadas y ejecutables:
   consistencia de estructura.
 - `StockLens_v05/testing/layer-02-unit`: logica aislada de frontend y backend,
   sin navegador ni AWS.
+- `StockLens_v05/testing/layer-03-api-integration`: contratos HTTP reales sobre
+  API Gateway, Lambda, DynamoDB, S3 y QR; Bedrock queda como opcion explicita.
 
 ## Brecha actual
 
@@ -191,8 +193,7 @@ tiene una base unitaria deterministica. Para completar la historia de calidad
 por capas, conviene agregar:
 
 - tests de componentes React;
-- Postman/Newman para API;
-- tests de persistencia DynamoDB/S3;
+- una tabla o stack efimero de integracion para separar completamente los datos;
 - un reporte consolidado que muestre que cada capa paso o fallo.
 
 ## Mensaje para la charla

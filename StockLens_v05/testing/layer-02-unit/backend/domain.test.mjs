@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   extractText,
+  isLayer3TestItemId,
   normalizeItem,
   normalizeSuggestion,
   parseBody,
@@ -66,4 +67,11 @@ test("construye rutas y URLs publicas sin perder caracteres", () => {
     publicItemUrl("https://mobile-v5.lens.glaciar.org", "AGC 27824/1"),
     "https://mobile-v5.lens.glaciar.org/?item=AGC+27824%2F1"
   );
+});
+
+test("la limpieza de integracion acepta solo IDs temporales Layer 03", () => {
+  assert.equal(isLayer3TestItemId("TEST-L3-1720000000-ABC123"), true);
+  assert.equal(isLayer3TestItemId("SLV5-MANG-001"), false);
+  assert.equal(isLayer3TestItemId("TEST-L3-"), false);
+  assert.equal(isLayer3TestItemId("TEST-L3-ABC/../../REAL"), false);
 });
