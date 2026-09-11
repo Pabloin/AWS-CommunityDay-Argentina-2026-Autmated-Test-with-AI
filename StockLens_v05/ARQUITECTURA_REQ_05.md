@@ -73,6 +73,10 @@ front-admin/staging/web/
 photos/tenants/aws-cday-argentina-2026-v5-staging/
 ```
 
+Los comandos `s3 sync --delete` de produccion excluyen siempre `staging/*`.
+Esta regla evita que una promocion de la aplicacion elimine los objetos del
+ambiente de pruebas almacenados en los mismos buckets.
+
 Cada ambiente mantiene distribuciones CloudFront, certificado, API Gateway,
 Lambda, tabla DynamoDB, roles IAM y Resource Group propios. Tambien se comparten
 la hosted zone de Route53 y el proveedor OIDC de GitHub ya existente.
