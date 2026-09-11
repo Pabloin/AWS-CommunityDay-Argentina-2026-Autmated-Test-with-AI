@@ -10,8 +10,18 @@ variable "mobile_domain_name" {
   type = string
 }
 
+variable "mobile_domain_aliases" {
+  type    = list(string)
+  default = []
+}
+
 variable "admin_domain_name" {
   type = string
+}
+
+variable "admin_domain_aliases" {
+  type    = list(string)
+  default = []
 }
 
 variable "public_hosted_zone_name" {

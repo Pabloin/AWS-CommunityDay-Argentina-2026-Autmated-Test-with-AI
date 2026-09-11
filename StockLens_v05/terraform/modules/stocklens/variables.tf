@@ -86,10 +86,22 @@ variable "mobile_domain_name" {
   default     = "mobile-v5.lens.glaciar.org"
 }
 
+variable "mobile_domain_aliases" {
+  description = "Additional DNS names served by the StockLens v05 mobile distribution."
+  type        = list(string)
+  default     = []
+}
+
 variable "admin_domain_name" {
   description = "Public DNS name for the StockLens v05 web app."
   type        = string
   default     = "web-v5.lens.glaciar.org"
+}
+
+variable "admin_domain_aliases" {
+  description = "Additional DNS names served by the StockLens v05 web distribution."
+  type        = list(string)
+  default     = []
 }
 
 variable "bedrock_model_id" {

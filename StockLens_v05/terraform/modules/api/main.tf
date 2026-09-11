@@ -82,14 +82,16 @@ resource "aws_apigatewayv2_api" "http" {
   cors_configuration {
     allow_headers = ["content-type"]
     allow_methods = ["GET", "POST", "DELETE", "OPTIONS"]
-    allow_origins = [
-      "https://${var.mobile_domain_name}",
-      "https://${var.admin_domain_name}",
-      "http://127.0.0.1:5190",
-      "http://127.0.0.1:5290",
-      "http://127.0.0.1:5192",
-      "http://localhost:5192"
-    ]
+    allow_origins = concat(
+      [for domain in concat([var.mobile_domain_name], var.mobile_domain_aliases) : "https://${domain}"],
+      [for domain in concat([var.admin_domain_name], var.admin_domain_aliases) : "https://${domain}"],
+      [
+        "http://127.0.0.1:5190",
+        "http://127.0.0.1:5290",
+        "http://127.0.0.1:5192",
+        "http://localhost:5192"
+      ]
+    )
   }
 
   tags = merge(var.tags, {
