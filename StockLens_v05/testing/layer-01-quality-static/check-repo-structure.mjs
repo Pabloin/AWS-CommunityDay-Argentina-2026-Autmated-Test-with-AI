@@ -44,6 +44,7 @@ const workflowPaths = [
 ];
 const workflows = workflowPaths.map((path) => readFileSync(join(repoRoot, path), "utf8"));
 const workflow = workflows.join("\n");
+const productionWorkflow = workflows[0];
 
 const forbiddenWorkflowReferences = ["front_admin/config.js", "aws s3 sync front_admin", "StockLens_v05/front_admin/**"];
 const staleReferences = forbiddenWorkflowReferences.filter((text) => workflow.includes(text));
@@ -64,6 +65,12 @@ if (missingWorkflowReferences.length) {
   for (const reference of missingWorkflowReferences) {
     console.error(`- ${reference}`);
   }
+  process.exit(1);
+}
+
+const stagingProtectionCount = productionWorkflow.split('--exclude "staging/*"').length - 1;
+if (stagingProtectionCount < 2) {
+  console.error("Production deploy must preserve staging/* in both shared frontend buckets.");
   process.exit(1);
 }
 

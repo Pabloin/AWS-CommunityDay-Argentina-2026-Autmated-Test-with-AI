@@ -115,13 +115,13 @@ jobs:
           echo "admin_distribution_id=$admin_distribution_id" >> "$GITHUB_OUTPUT"
 
       - name: Deploy mobile app
-        run: aws s3 sync front_mobile/dist "s3://${{ steps.resources.outputs.mobile_bucket }}" --delete
+        run: aws s3 sync front_mobile/dist "s3://${{ steps.resources.outputs.mobile_bucket }}" --delete --exclude "staging/*"
 
       - name: Deploy web app
         run: |
           api_endpoint="$(aws apigatewayv2 get-apis --query "Items[?Name=='${PROJECT_NAME}-http-api'].ApiEndpoint | [0]" --output text)"
           printf 'window.STOCKLENS_API_BASE_URL = "%s";\nwindow.STOCKLENS_MOBILE_APP_URL = "https://%s";\n' "$api_endpoint" "$MOBILE_DOMAIN_NAME" > front_web/config.js
-          aws s3 sync front_web "s3://${{ steps.resources.outputs.admin_bucket }}" --delete --exclude "evidence/*"
+          aws s3 sync front_web "s3://${{ steps.resources.outputs.admin_bucket }}" --delete --exclude "staging/*" --exclude "evidence/*"
 
       - name: Deploy API Lambda
         run: |
