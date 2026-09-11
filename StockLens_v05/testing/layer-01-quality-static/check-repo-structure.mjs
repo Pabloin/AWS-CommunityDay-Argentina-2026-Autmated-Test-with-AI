@@ -45,6 +45,7 @@ const workflowPaths = [
 const workflows = workflowPaths.map((path) => readFileSync(join(repoRoot, path), "utf8"));
 const workflow = workflows.join("\n");
 const productionWorkflow = workflows[0];
+const stagingWorkflow = workflows[1];
 
 const forbiddenWorkflowReferences = ["front_admin/config.js", "aws s3 sync front_admin", "StockLens_v05/front_admin/**"];
 const staleReferences = forbiddenWorkflowReferences.filter((text) => workflow.includes(text));
@@ -71,6 +72,11 @@ if (missingWorkflowReferences.length) {
 const stagingProtectionCount = productionWorkflow.split('--exclude "staging/*"').length - 1;
 if (stagingProtectionCount < 2) {
   console.error("Production deploy must preserve staging/* in both shared frontend buckets.");
+  process.exit(1);
+}
+
+if (!stagingWorkflow.includes('--key "staging/web/evidence/"')) {
+  console.error("Staging must publish a directory-index object so /evidence/ serves the evidence viewer.");
   process.exit(1);
 }
 
