@@ -73,6 +73,9 @@ QR; la vista admin permite ver el catalogo compartido desde una notebook.
   </tr>
 </table>
 
+Evidencia visual de las pruebas E2E v05:
+[ver ejecuciones, videos y resultados](https://web-staging-v5.lens.glaciar.org/evidence/).
+
 Estado verificado el 2026-09-07:
 
 - `stock-v4.lens.glaciar.org`: HTTP 200.

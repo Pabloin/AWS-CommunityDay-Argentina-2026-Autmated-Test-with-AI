@@ -94,7 +94,7 @@ jobs:
       - name: Deploy candidate to staging
         run: |
           aws s3 sync front_mobile/dist "s3://${MOBILE_BUCKET}/staging/mobile" --delete
-          aws s3 sync front_web "s3://${ADMIN_BUCKET}/staging/web" --delete
+          aws s3 sync front_web "s3://${ADMIN_BUCKET}/staging/web" --delete --exclude "evidence/*"
           aws lambda update-function-code --function-name "${PROJECT_NAME}-api" --zip-file fileb://backend/dist/api.zip
           aws lambda wait function-updated-v2 --function-name "${PROJECT_NAME}-api"
 
@@ -128,6 +128,8 @@ jobs:
           npx --prefix testing/layer-04-e2e-playwright playwright install --with-deps chromium
 
       - name: Run Layer 04 Playwright E2E against staging
+        id: layer04
+        continue-on-error: true
         env:
           MOBILE_BASE_URL: https://${{ env.MOBILE_DOMAIN_NAME }}
           WEB_BASE_URL: https://${{ env.ADMIN_DOMAIN_NAME }}
@@ -144,3 +146,25 @@ jobs:
             StockLens_v05/testing/layer-04-e2e-playwright/test-results
           if-no-files-found: warn
           retention-days: 14
+
+      - name: Publish Layer 04 evidence website to S3
+        if: always()
+        env:
+          LAYER_04_STATUS: ${{ steps.layer04.outcome }}
+          EVIDENCE_BASE_URL: https://${{ env.ADMIN_DOMAIN_NAME }}/evidence
+        run: |
+          evidence_dir="testing/layer-04-e2e-playwright/evidence-publish"
+          mkdir -p "$evidence_dir"
+          aws s3 cp "s3://${ADMIN_BUCKET}/staging/web/evidence/index.json" "$evidence_dir/index.previous.json" >/dev/null 2>&1 || true
+          node testing/layer-04-e2e-playwright/scripts/build-evidence-site.mjs
+          aws s3 sync "$evidence_dir" "s3://${ADMIN_BUCKET}/staging/web/evidence"
+          invalidation_id="$(aws cloudfront create-invalidation --distribution-id "${{ steps.resources.outputs.admin_distribution_id }}" --paths "/evidence/*" --query 'Invalidation.Id' --output text)"
+          aws cloudfront wait invalidation-completed --distribution-id "${{ steps.resources.outputs.admin_distribution_id }}" --id "$invalidation_id"
+          echo "### Layer 04 evidence" >> "$GITHUB_STEP_SUMMARY"
+          echo "https://${ADMIN_DOMAIN_NAME}/evidence/" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Enforce Layer 04 quality gate
+        if: always() && steps.layer04.outcome != 'success'
+        run: |
+          echo "::error title=Layer 04 blocked deployment::Playwright outcome: ${{ steps.layer04.outcome }}. Review https://${ADMIN_DOMAIN_NAME}/evidence/"
+          exit 1

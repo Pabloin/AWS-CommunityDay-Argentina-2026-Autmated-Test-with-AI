@@ -103,6 +103,11 @@ Staging reutiliza los buckets S3 v05 mediante prefijos propios; no crea buckets
 adicionales. Lambda, API Gateway y DynamoDB si son independientes para evitar
 que una prueba modifique el catalogo de produccion.
 
+La evidencia visual de Playwright se publica en
+`https://web-staging-v5.lens.glaciar.org/evidence/`. El historial, los videos,
+las capturas y el reporte HTML usan el bucket web compartido bajo el prefijo
+`staging/web/evidence/`.
+
 Backend:
 
 ```text

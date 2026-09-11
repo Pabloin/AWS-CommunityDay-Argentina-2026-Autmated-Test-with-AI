@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Evidencia visual de las pruebas E2E de StockLens." />
+    <title>StockLens | Evidencia E2E</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">SL</span>
+        <div>
+          <strong>StockLens</strong>
+          <span>Evidencia E2E</span>
+        </div>
+      </div>
+      <nav aria-label="Aplicaciones">
+        <a href="https://mobile-staging-v5.lens.glaciar.org">Mobile</a>
+        <a href="https://web-staging-v5.lens.glaciar.org">Web</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="intro">
+        <div>
+          <p class="eyebrow">PLAYWRIGHT · STAGING</p>
+          <h1>Resultados que se pueden ver</h1>
+          <p>Recorridos reales del navegador, publicados automáticamente por el pipeline.</p>
+        </div>
+        <button id="refresh" type="button">Actualizar</button>
+      </section>
+
+      <section class="metrics" aria-label="Resumen">
+        <div><span>Ejecuciones</span><strong id="runCount">0</strong></div>
+        <div><span>Último estado</span><strong id="latestStatus">-</strong></div>
+        <div><span>Tests</span><strong id="testCount">0</strong></div>
+        <div><span>Videos</span><strong id="videoCount">0</strong></div>
+      </section>
+
+      <section class="workspace">
+        <aside>
+          <h2>Ejecuciones</h2>
+          <div id="runs" class="runs"></div>
+        </aside>
+
+        <section id="detail" class="detail" aria-live="polite">
+          <div class="empty">
+            <h2>Sin evidencia publicada</h2>
+            <p>La próxima ejecución de la Layer 04 aparecerá acá.</p>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
