@@ -97,6 +97,13 @@ push
      -> promocion a produccion
 ```
 
+La Layer 04 publica siempre, incluso ante fallas, un sitio de evidencia en
+`web-staging-v5.lens.glaciar.org/evidence/`. S3 conserva `index.json`, videos,
+capturas, traces y el reporte HTML bajo el prefijo aislado
+`staging/web/evidence/`; CloudFront permite revisarlos sin descargar artifacts
+desde GitHub. El resultado de Playwright se aplica como quality gate despues de
+publicar la evidencia.
+
 Workflows:
 
 - `.github/workflows/stocklens-v05-staging-infra.yml`

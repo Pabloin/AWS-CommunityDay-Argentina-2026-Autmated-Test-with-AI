@@ -25,6 +25,18 @@ Playwright produce para cada recorrido:
 - reporte HTML;
 - resultado JUnit.
 
+El pipeline conserva el artifact descargable de GitHub y tambien publica una
+vista navegable en:
+
+```text
+https://web-staging-v5.lens.glaciar.org/evidence/
+```
+
+El visor muestra primero el resumen estructurado y los videos embebidos. Las
+capturas, el reporte HTML completo y los traces quedan disponibles como
+diagnostico secundario. Los archivos viven en el bucket web existente bajo
+`staging/web/evidence/runs/<run-id>/<attempt>/`; no se crea otro bucket.
+
 Los items usan el prefijo temporal `TEST-L3-E2E-` para que el endpoint de soporte
 permita eliminarlos en un bloque `finally`, incluso cuando falle una assertion.
 

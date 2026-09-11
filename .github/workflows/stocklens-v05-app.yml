@@ -121,7 +121,7 @@ jobs:
         run: |
           api_endpoint="$(aws apigatewayv2 get-apis --query "Items[?Name=='${PROJECT_NAME}-http-api'].ApiEndpoint | [0]" --output text)"
           printf 'window.STOCKLENS_API_BASE_URL = "%s";\nwindow.STOCKLENS_MOBILE_APP_URL = "https://%s";\n' "$api_endpoint" "$MOBILE_DOMAIN_NAME" > front_web/config.js
-          aws s3 sync front_web "s3://${{ steps.resources.outputs.admin_bucket }}" --delete
+          aws s3 sync front_web "s3://${{ steps.resources.outputs.admin_bucket }}" --delete --exclude "evidence/*"
 
       - name: Deploy API Lambda
         run: |
