@@ -38,6 +38,12 @@ variable "front_admin_distribution_arn" {
   type = string
 }
 
+variable "front_home_distribution_arn" {
+  type     = string
+  default  = null
+  nullable = true
+}
+
 variable "api_function_arn" {
   type = string
 }

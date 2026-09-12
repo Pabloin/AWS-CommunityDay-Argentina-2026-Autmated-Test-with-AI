@@ -104,6 +104,12 @@ variable "admin_domain_aliases" {
   default     = []
 }
 
+variable "home_domain_name" {
+  description = "Optional standalone domain for the StockLens demo landing page."
+  type        = string
+  default     = ""
+}
+
 variable "bedrock_model_id" {
   description = "Amazon Bedrock vision-capable model used to suggest item metadata from photos."
   type        = string

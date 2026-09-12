@@ -33,6 +33,7 @@ module "apps" {
   mobile_domain_aliases    = var.mobile_domain_aliases
   admin_domain_name        = var.admin_domain_name
   admin_domain_aliases     = var.admin_domain_aliases
+  home_domain_name         = var.home_domain_name
   public_hosted_zone_name  = var.public_hosted_zone_name
   public_hosted_zone_id    = var.public_hosted_zone_id
   create_storage_buckets   = var.create_storage_buckets
@@ -75,6 +76,7 @@ module "cicd" {
   admin_objects_arn             = module.apps.admin_objects_arn
   front_mobile_distribution_arn = module.apps.front_mobile_distribution_arn
   front_admin_distribution_arn  = module.apps.front_admin_distribution_arn
+  front_home_distribution_arn   = module.apps.front_home_distribution_arn
   api_function_arn              = module.api.function_arn
   tags                          = local.tags
 }

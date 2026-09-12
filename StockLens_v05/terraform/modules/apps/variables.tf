@@ -24,6 +24,11 @@ variable "admin_domain_aliases" {
   default = []
 }
 
+variable "home_domain_name" {
+  type    = string
+  default = ""
+}
+
 variable "public_hosted_zone_name" {
   type = string
 }

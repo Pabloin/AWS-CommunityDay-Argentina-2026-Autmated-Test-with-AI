@@ -19,6 +19,7 @@ on:
     paths:
       - "StockLens_v05/front_mobile/**"
       - "StockLens_v05/front_web/**"
+      - "StockLens_v05/front_home/**"
       - "StockLens_v05/backend/**"
       - "StockLens_v05/testing/**"
       - ".github/workflows/stocklens-v05-staging-app.yml"

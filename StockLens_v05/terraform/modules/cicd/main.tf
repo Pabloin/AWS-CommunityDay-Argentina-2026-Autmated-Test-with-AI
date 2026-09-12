@@ -56,7 +56,7 @@ resource "aws_iam_role_policy" "github_actions_app" {
       {
         Effect   = "Allow"
         Action   = ["cloudfront:CreateInvalidation", "cloudfront:GetInvalidation"]
-        Resource = [var.front_mobile_distribution_arn, var.front_admin_distribution_arn]
+        Resource = compact([var.front_mobile_distribution_arn, var.front_admin_distribution_arn, var.front_home_distribution_arn])
       },
       {
         Effect   = "Allow"

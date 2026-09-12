@@ -6,6 +6,10 @@ output "admin_url" {
   value = module.apps.admin_url
 }
 
+output "home_url" {
+  value = module.apps.home_url
+}
+
 output "front_mobile_bucket" {
   value = module.apps.front_mobile_bucket
 }
@@ -28,6 +32,10 @@ output "front_mobile_distribution_id" {
 
 output "front_admin_distribution_id" {
   value = module.apps.front_admin_distribution_id
+}
+
+output "front_home_distribution_id" {
+  value = module.apps.front_home_distribution_id
 }
 
 output "items_table" {

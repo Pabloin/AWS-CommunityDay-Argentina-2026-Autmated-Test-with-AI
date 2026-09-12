@@ -97,9 +97,13 @@ jobs:
           fi
 
       - name: Terraform apply
-        if: github.event_name == 'workflow_dispatch' && inputs.apply == 'true'
+        if: >-
+          (github.event_name == 'workflow_dispatch' && inputs.apply == 'true') ||
+          (github.event_name == 'push' && contains(github.event.head_commit.message, '[infra-first]'))
         run: terraform apply -auto-approve tfplan
 
       - name: Terraform outputs
-        if: github.event_name == 'workflow_dispatch' && inputs.apply == 'true'
+        if: >-
+          (github.event_name == 'workflow_dispatch' && inputs.apply == 'true') ||
+          (github.event_name == 'push' && contains(github.event.head_commit.message, '[infra-first]'))
         run: terraform output
