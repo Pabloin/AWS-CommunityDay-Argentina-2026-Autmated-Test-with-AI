@@ -7,6 +7,7 @@ interactua con Mobile y Web mientras la preparacion y limpieza usan la API real.
 
 - Mobile abre una ficha mediante el mismo `?item=` incluido en el QR.
 - Mobile muestra datos persistidos y genera una etiqueta QR descargable.
+- Mobile lee la foto PNG de una etiqueta QR real y recupera la ficha cloud.
 - Mobile busca el objeto desde el inventario.
 - Web carga el catalogo, busca el objeto y abre su detalle.
 - Web obtiene el QR desde API Gateway y enlaza la ficha Mobile.
