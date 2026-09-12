@@ -22,8 +22,12 @@ a { color: inherit; }
   border-bottom: 1px solid rgba(255, 255, 255, .2);
 }
 
-.brand img { width: clamp(180px, 18vw, 250px); display: block; filter: drop-shadow(0 5px 20px rgba(0, 0, 0, .35)); }
+.brand img { width: clamp(190px, 19vw, 270px); display: block; filter: drop-shadow(0 5px 20px rgba(0, 0, 0, .35)); }
+.header-actions { display: flex; align-items: center; gap: 18px; }
 .header-link { color: #fff; font-size: 14px; font-weight: 750; text-decoration: none; }
+.github-link { min-height: 34px; padding: 0 12px; display: inline-flex; align-items: center; gap: 7px; border: 1px solid #d8dee4; border-radius: 5px; background: #fff; color: #1f2328; font-size: 13px; font-weight: 750; text-decoration: none; box-shadow: 0 1px 0 rgba(31, 35, 40, .1); }
+.github-link:hover { background: #f3f4f6; }
+.github-link svg { width: 17px; height: 17px; fill: currentColor; }
 
 .hero {
   position: relative;
@@ -82,8 +86,9 @@ footer span { color: #a9bec9; font-size: 13px; }
 
 @media (max-width: 560px) {
   .site-header { height: 68px; padding-inline: 18px; }
-  .brand img { width: 155px; }
-  .header-link { font-size: 12px; }
+  .brand img { width: 165px; }
+  .header-link { display: none; }
+  .github-link { min-height: 32px; padding-inline: 10px; }
   .hero { min-height: 720px; }
   .hero-image { object-position: 59% top; height: 58%; }
   .hero-content { padding: 320px 18px 70px; }
