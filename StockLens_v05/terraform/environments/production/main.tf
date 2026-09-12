@@ -56,6 +56,7 @@ module "stocklens" {
   mobile_domain_aliases    = var.mobile_domain_aliases
   admin_domain_name        = var.admin_domain_name
   admin_domain_aliases     = var.admin_domain_aliases
+  home_domain_name         = var.home_domain_name
   bedrock_model_id         = var.bedrock_model_id
   lambda_package_path      = abspath("${path.root}/../../../backend/dist/api.zip")
 }

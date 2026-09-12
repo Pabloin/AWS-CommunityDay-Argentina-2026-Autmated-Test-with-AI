@@ -8,6 +8,9 @@ const requiredPaths = [
   "StockLens_v05/front_mobile/tsconfig.json",
   "StockLens_v05/front_web/index.html",
   "StockLens_v05/front_web/config.js",
+  "StockLens_v05/front_home/package.json",
+  "StockLens_v05/front_home/build.mjs",
+  "StockLens_v05/front_home/public/index.html",
   "StockLens_v05/backend/functions/api.mjs",
   "StockLens_v05/testing/layer-04-e2e-playwright/playwright.config.ts",
   "StockLens_v05/testing/layer-04-e2e-playwright/global-teardown.ts",
@@ -73,6 +76,13 @@ const stagingProtectionCount = productionWorkflow.split('--exclude "staging/*"')
 if (stagingProtectionCount < 2) {
   console.error("Production deploy must preserve staging/* in both shared frontend buckets.");
   process.exit(1);
+}
+
+for (const expected of ['--exclude "home/*"', 's3://${admin_bucket}/evidence', 'front_home/dist']) {
+  if (!productionWorkflow.includes(expected)) {
+    console.error(`Production deploy is missing home/evidence protection: ${expected}`);
+    process.exit(1);
+  }
 }
 
 if (!stagingWorkflow.includes('--key "staging/web/evidence/"')) {

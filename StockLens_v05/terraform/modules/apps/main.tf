@@ -108,6 +108,43 @@ resource "aws_acm_certificate_validation" "mobile" {
   validation_record_fqdns = [for record in aws_route53_record.mobile_certificate_validation : record.fqdn]
 }
 
+resource "aws_acm_certificate" "home" {
+  count             = var.home_domain_name == "" ? 0 : 1
+  provider          = aws.us_east_1
+  domain_name       = var.home_domain_name
+  validation_method = "DNS"
+  lifecycle {
+    create_before_destroy = true
+  }
+  tags = merge(var.tags, {
+    Component = "frontend-home"
+    Purpose   = "demo-entrypoint"
+  })
+}
+
+resource "aws_route53_record" "home_certificate_validation" {
+  for_each = var.home_domain_name == "" ? {} : {
+    for option in aws_acm_certificate.home[0].domain_validation_options :
+    option.domain_name => {
+      name   = option.resource_record_name
+      record = option.resource_record_value
+      type   = option.resource_record_type
+    }
+  }
+  zone_id = data.aws_route53_zone.public.zone_id
+  name    = each.value.name
+  type    = each.value.type
+  records = [each.value.record]
+  ttl     = 60
+}
+
+resource "aws_acm_certificate_validation" "home" {
+  count                   = var.home_domain_name == "" ? 0 : 1
+  provider                = aws.us_east_1
+  certificate_arn         = aws_acm_certificate.home[0].arn
+  validation_record_fqdns = [for record in aws_route53_record.home_certificate_validation : record.fqdn]
+}
+
 resource "aws_cloudfront_distribution" "front_mobile" {
   enabled             = true
   is_ipv6_enabled     = true
@@ -209,6 +246,59 @@ resource "aws_cloudfront_distribution" "front_admin" {
   })
 }
 
+resource "aws_cloudfront_distribution" "front_home" {
+  count               = var.home_domain_name == "" ? 0 : 1
+  enabled             = true
+  is_ipv6_enabled     = true
+  comment             = "StockLens v05 demo home"
+  default_root_object = "index.html"
+  aliases             = [var.home_domain_name]
+
+  origin {
+    domain_name              = local.admin_origin_domain
+    origin_access_control_id = aws_cloudfront_origin_access_control.mobile.id
+    origin_id                = "${var.project_name}-home-origin"
+    origin_path              = "/home"
+  }
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "${var.project_name}-home-origin"
+    viewer_protocol_policy = "redirect-to-https"
+    compress               = true
+    forwarded_values {
+      query_string = false
+      cookies {
+        forward = "none"
+      }
+    }
+  }
+  custom_error_response {
+    error_code         = 403
+    response_code      = 200
+    response_page_path = "/index.html"
+  }
+  custom_error_response {
+    error_code         = 404
+    response_code      = 200
+    response_page_path = "/index.html"
+  }
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+  viewer_certificate {
+    acm_certificate_arn      = aws_acm_certificate_validation.home[0].certificate_arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
+  }
+  tags = merge(var.tags, {
+    Component = "frontend-home"
+    Purpose   = "demo-entrypoint"
+  })
+}
+
 resource "aws_s3_bucket_policy" "front_mobile" {
   count  = var.create_storage_buckets ? 1 : 0
   bucket = aws_s3_bucket.front_mobile[0].id
@@ -291,6 +381,18 @@ resource "aws_route53_record" "front_admin_alias" {
   alias {
     name                   = aws_cloudfront_distribution.front_admin.domain_name
     zone_id                = aws_cloudfront_distribution.front_admin.hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+
+resource "aws_route53_record" "front_home" {
+  count   = var.home_domain_name == "" ? 0 : 1
+  zone_id = data.aws_route53_zone.public.zone_id
+  name    = var.home_domain_name
+  type    = "A"
+  alias {
+    name                   = aws_cloudfront_distribution.front_home[0].domain_name
+    zone_id                = aws_cloudfront_distribution.front_home[0].hosted_zone_id
     evaluate_target_health = false
   }
 }

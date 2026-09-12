@@ -71,6 +71,8 @@ Aliases estables que actualmente apuntan a las mismas distribuciones v5:
 ```text
 https://mobile.lens.glaciar.org
 https://web.lens.glaciar.org
+https://home.lens.glaciar.org
+https://web.lens.glaciar.org/evidence/
 ```
 
 Los aliases estables se administran con Terraform y permiten que una futura

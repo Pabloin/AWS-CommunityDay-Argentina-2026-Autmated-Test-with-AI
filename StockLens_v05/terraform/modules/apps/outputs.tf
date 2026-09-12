@@ -6,6 +6,10 @@ output "admin_url" {
   value = "https://${var.admin_domain_name}"
 }
 
+output "home_url" {
+  value = var.home_domain_name == "" ? null : "https://${var.home_domain_name}"
+}
+
 output "front_mobile_bucket" {
   value = local.front_mobile_bucket
 }
@@ -52,4 +56,12 @@ output "front_mobile_distribution_arn" {
 
 output "front_admin_distribution_arn" {
   value = aws_cloudfront_distribution.front_admin.arn
+}
+
+output "front_home_distribution_id" {
+  value = try(aws_cloudfront_distribution.front_home[0].id, null)
+}
+
+output "front_home_distribution_arn" {
+  value = try(aws_cloudfront_distribution.front_home[0].arn, null)
 }

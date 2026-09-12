@@ -50,6 +50,8 @@ catalogar objetos con fotos, analizarlos con IA, generar etiquetas QR y
 administrar un inventario personal. La app mobile carga objetos, fotos y lee
 QR; la vista admin permite ver el catalogo compartido desde una notebook.
 
+Entrada de la demo: [home.lens.glaciar.org](https://home.lens.glaciar.org).
+
 <table>
   <tr>
     <td align="center" width="50%" style="padding: 18px;">
@@ -74,7 +76,7 @@ QR; la vista admin permite ver el catalogo compartido desde una notebook.
 </table>
 
 Evidencia visual de las pruebas E2E v05:
-[ver ejecuciones, videos y resultados](https://web-staging-v5.lens.glaciar.org/evidence/).
+[ver ejecuciones, videos y resultados](https://web.lens.glaciar.org/evidence/).
 
 Estado verificado el 2026-09-07:
 

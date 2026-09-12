@@ -62,6 +62,8 @@ no debe aplicarse.
 | Web | `web-staging-v5.lens.glaciar.org` | `web-v5.lens.glaciar.org` |
 | Alias estable Mobile | No aplica | `mobile.lens.glaciar.org` |
 | Alias estable Web | No aplica | `web.lens.glaciar.org` |
+| Entrada pública de la demo | No aplica | `home.lens.glaciar.org` con distribución CloudFront aislada y el bucket Web reutilizado bajo `home/` |
+| Evidencia Playwright | Artefacto de GitHub | Portal navegable en `web.lens.glaciar.org/evidence/` y `web-v5.lens.glaciar.org/evidence/` |
 | Tenant | `aws-cday-argentina-2026-v5-staging` | `aws-cday-argentina-2026-v5` |
 | State key | `stocklens/v05/staging/terraform.tfstate` | `stocklens/v05/terraform.tfstate` |
 

@@ -104,6 +104,12 @@ variable "admin_domain_aliases" {
   default     = ["web.lens.glaciar.org"]
 }
 
+variable "home_domain_name" {
+  description = "Public DNS name for the StockLens demo landing page."
+  type        = string
+  default     = "home.lens.glaciar.org"
+}
+
 variable "bedrock_model_id" {
   description = "Amazon Bedrock vision-capable model used to suggest item metadata from photos."
   type        = string

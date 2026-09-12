@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#061a36" />
+    <meta name="description" content="StockLens transforma una foto en una ficha de inventario con QR usando IA." />
+    <title>StockLens | Tu inventario, a la vista</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a href="./" class="brand" aria-label="StockLens inicio">
+        <img src="./assets/stocklens-logo.png" alt="StockLens" />
+      </a>
+      <a class="header-link" href="https://web.lens.glaciar.org/evidence/">Ver pruebas</a>
+    </header>
+
+    <main>
+      <section class="hero">
+        <img class="hero-image" src="./assets/stocklens-mago-usuario-qr.png" alt="Una persona organiza una caja con StockLens y etiquetas QR" />
+        <div class="hero-shade" aria-hidden="true"></div>
+        <div class="hero-content">
+          <p class="eyebrow">INVENTARIO VISUAL CON IA</p>
+          <h1>StockLens</h1>
+          <p class="hero-line">Una foto. Una ficha. Un QR.</p>
+          <p class="hero-copy">Reconocé lo que tenés, organizalo y volvé a encontrarlo desde cualquier dispositivo.</p>
+          <div class="hero-actions">
+            <a class="button primary" href="https://mobile.lens.glaciar.org">Abrir Mobile</a>
+            <a class="button secondary" href="https://web.lens.glaciar.org">Ver inventario</a>
+          </div>
+        </div>
+        <a class="next" href="#llevar">Probalo ahora <span aria-hidden="true">↓</span></a>
+      </section>
+
+      <section class="takeaway" id="llevar">
+        <div class="section-heading">
+          <p class="eyebrow">LLEVATE LA DEMO</p>
+          <h2>Escaneá y entrá</h2>
+          <p>Mobile para clasificar y leer etiquetas. Web para recorrer todo el inventario.</p>
+        </div>
+
+        <div class="qr-gallery">
+          <article class="qr-item mobile">
+            <a href="https://mobile.lens.glaciar.org" aria-label="Abrir StockLens Mobile">
+              <img src="./assets/qr-mobile.png" alt="QR para abrir StockLens Mobile" />
+            </a>
+            <div>
+              <span>01 · DESDE EL TELÉFONO</span>
+              <h3>Mobile</h3>
+              <p>Sacá una foto, dejá que la IA prepare la ficha y leé etiquetas QR.</p>
+              <a href="https://mobile.lens.glaciar.org">mobile.lens.glaciar.org</a>
+            </div>
+          </article>
+
+          <article class="qr-item web">
+            <a href="https://web.lens.glaciar.org" aria-label="Abrir StockLens Web">
+              <img src="./assets/qr-web.png" alt="QR para abrir StockLens Web" />
+            </a>
+            <div>
+              <span>02 · DESDE LA COMPUTADORA</span>
+              <h3>Web</h3>
+              <p>Buscá objetos, revisá fichas y compartí la etiqueta asociada.</p>
+              <a href="https://web.lens.glaciar.org">web.lens.glaciar.org</a>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="proof">
+        <div>
+          <p class="eyebrow">CONFIANZA ANTES DEL DEPLOY</p>
+          <h2>La demo también muestra cómo se prueba.</h2>
+        </div>
+        <p>Playwright recorre Mobile y Web en staging. Cada ejecución publica resultados, videos y traces que se pueden revisar desde el navegador.</p>
+        <a class="button dark" href="https://web.lens.glaciar.org/evidence/">Abrir evidencia E2E</a>
+      </section>
+    </main>
+
+    <footer>
+      <strong>StockLens</strong>
+      <span>AWS Community Day Argentina 2026</span>
+    </footer>
+  </body>
+</html>

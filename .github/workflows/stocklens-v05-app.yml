@@ -24,6 +24,7 @@ env:
   PROJECT_NAME: stocklens-v05
   MOBILE_DOMAIN_NAME: mobile-v5.lens.glaciar.org
   ADMIN_DOMAIN_NAME: web-v5.lens.glaciar.org
+  HOME_DOMAIN_NAME: home.lens.glaciar.org
 
 jobs:
   unit-tests:
@@ -74,7 +75,7 @@ jobs:
           role-session-name: stocklens-v05-app
           allowed-account-ids: "442809140287"
 
-      - name: Build mobile app
+      - name: Build applications
         run: |
           api_endpoint="$(aws apigatewayv2 get-apis --query "Items[?Name=='${PROJECT_NAME}-http-api'].ApiEndpoint | [0]" --output text)"
           if [ -z "$api_endpoint" ] || [ "$api_endpoint" = "None" ]; then
@@ -84,6 +85,8 @@ jobs:
           npm ci --prefix front_mobile --include=optional
           npm rebuild --prefix front_mobile esbuild
           VITE_API_BASE_URL="$api_endpoint" VITE_PUBLIC_APP_URL="https://${MOBILE_DOMAIN_NAME}" npm --prefix front_mobile run build
+          npm ci --prefix front_home
+          npm --prefix front_home run build
           npm ci --prefix backend
           npm --prefix backend run package
 
@@ -95,6 +98,7 @@ jobs:
           admin_bucket="${PROJECT_NAME}-front-admin-${account_id}"
           mobile_distribution_id="${{ vars.STOCKLENS_V05_FRONT_MOBILE_DISTRIBUTION_ID }}"
           admin_distribution_id="${{ vars.STOCKLENS_V05_FRONT_ADMIN_DISTRIBUTION_ID }}"
+          home_distribution_id="$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Quantity > \`0\` && contains(Aliases.Items, '${HOME_DOMAIN_NAME}')].Id | [0]" --output text)"
           if [ -z "$mobile_distribution_id" ]; then
             mobile_distribution_id="$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Quantity > \`0\` && contains(Aliases.Items, '${MOBILE_DOMAIN_NAME}')].Id | [0]" --output text)"
           fi
@@ -109,10 +113,15 @@ jobs:
             echo "::error title=Missing admin CloudFront::Run StockLens v05 Infrastructure before deploying the app."
             exit 1
           fi
+          if [ -z "$home_distribution_id" ] || [ "$home_distribution_id" = "None" ]; then
+            echo "::error title=Missing home CloudFront::Run StockLens v05 Infrastructure with apply=true before deploying the landing page."
+            exit 1
+          fi
           echo "mobile_bucket=$mobile_bucket" >> "$GITHUB_OUTPUT"
           echo "admin_bucket=$admin_bucket" >> "$GITHUB_OUTPUT"
           echo "mobile_distribution_id=$mobile_distribution_id" >> "$GITHUB_OUTPUT"
           echo "admin_distribution_id=$admin_distribution_id" >> "$GITHUB_OUTPUT"
+          echo "home_distribution_id=$home_distribution_id" >> "$GITHUB_OUTPUT"
 
       - name: Deploy mobile app
         run: aws s3 sync front_mobile/dist "s3://${{ steps.resources.outputs.mobile_bucket }}" --delete --exclude "staging/*"
@@ -121,7 +130,19 @@ jobs:
         run: |
           api_endpoint="$(aws apigatewayv2 get-apis --query "Items[?Name=='${PROJECT_NAME}-http-api'].ApiEndpoint | [0]" --output text)"
           printf 'window.STOCKLENS_API_BASE_URL = "%s";\nwindow.STOCKLENS_MOBILE_APP_URL = "https://%s";\n' "$api_endpoint" "$MOBILE_DOMAIN_NAME" > front_web/config.js
-          aws s3 sync front_web "s3://${{ steps.resources.outputs.admin_bucket }}" --delete --exclude "staging/*" --exclude "evidence/*"
+          aws s3 sync front_web "s3://${{ steps.resources.outputs.admin_bucket }}" --delete --exclude "staging/*" --exclude "evidence/*" --exclude "home/*"
+
+      - name: Deploy home and Playwright evidence
+        run: |
+          admin_bucket="${{ steps.resources.outputs.admin_bucket }}"
+          aws s3 sync front_home/dist "s3://${admin_bucket}/home" --delete
+          aws s3 sync "s3://${admin_bucket}/staging/web/evidence" "s3://${admin_bucket}/evidence" --delete
+          aws s3api put-object \
+            --bucket "$admin_bucket" \
+            --key "evidence/" \
+            --body "testing/layer-04-e2e-playwright/viewer/index.html" \
+            --content-type "text/html; charset=utf-8" \
+            --cache-control "no-cache"
 
       - name: Deploy API Lambda
         run: |
@@ -150,3 +171,6 @@ jobs:
 
       - name: Invalidate admin CloudFront
         run: aws cloudfront create-invalidation --distribution-id "${{ steps.resources.outputs.admin_distribution_id }}" --paths "/*"
+
+      - name: Invalidate home CloudFront
+        run: aws cloudfront create-invalidation --distribution-id "${{ steps.resources.outputs.home_distribution_id }}" --paths "/*"
