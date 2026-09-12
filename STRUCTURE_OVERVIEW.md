@@ -22,7 +22,6 @@ AWS-CommunityDay-Argentina-2026-Autmated-Test-with-AI/
 │   └── diagrams/
 │       └── architecture.md
 |
-├── StockLens_v04/
 └── StockLens_v05/
 ```
 
@@ -30,12 +29,10 @@ AWS-CommunityDay-Argentina-2026-Autmated-Test-with-AI/
 
 | Version | Objetivo | Estado |
 | --- | --- | --- |
-| `StockLens_v04` | Pipeline con IA, Playwright, evidencia y GitHub Actions OIDC | Desplegada |
 | `StockLens_v05` | Producto mobile-first con catalogo cloud y Bedrock Vision | Desplegada |
 
 ## Flujo de charla
 
 1. Mostrar el problema: inventario fisico sin trazabilidad visual.
-2. Demo v04: pipeline con IA, tests Playwright y evidencia.
-3. Demo v05: producto mobile-first con catalogo cloud.
-4. Cierre: IA acelera, pero cloud engineering lo vuelve operable.
+2. Demo v05: producto mobile-first con catalogo cloud.
+3. Cierre: IA acelera, pero cloud engineering lo vuelve operable.

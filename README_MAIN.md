@@ -9,7 +9,6 @@ fotos de activos, auditoria de campo y trazabilidad.
 ## Como navegar
 
 - `StockLens_ppt/`: material de presentacion.
-- `StockLens_v04/`: demo tecnica del pipeline con IA, Playwright y evidencia.
 - `StockLens_v05/`: demo de producto mobile-first con catalogo cloud.
 
 ## Comandos
